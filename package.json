@@ -1,5 +1,5 @@
 {
-  "name": "@yvng-jie/devtools-cli",
+  "name": "@yangfree/devtools-cli",
   "version": "0.1.0",
   "packageManager": "pnpm@11.1.2",
   "description": "Handy developer tools for your terminal — uuid, base64, jwt, color, hash & more",
@@ -38,7 +38,7 @@
     "url": "https://github.com/yvng-jie/devtools-cli/issues"
   },
   "license": "MIT",
-  "author": "yvng-jie",
+  "author": "yangfree",
   "engines": {
     "node": ">=22"
   },

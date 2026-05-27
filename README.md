@@ -3,24 +3,24 @@
 > Handy developer tools for your terminal — UUID, Base64, JWT, color converter, hash & more.
 
 <p align="center">
-  <img src="https://img.shields.io/npm/v/@yvng-jie/devtools-cli?color=blue&label=version" alt="npm version">
+  <img src="https://img.shields.io/npm/v/@yangfree/devtools-cli?color=blue&label=version" alt="npm version">
   <img src="https://img.shields.io/github/actions/workflow/status/yvng-jie/devtools-cli/ci.yml?branch=main" alt="CI">
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node version">
-  <img src="https://img.shields.io/npm/l/@yvng-jie/devtools-cli" alt="License">
+  <img src="https://img.shields.io/npm/l/@yangfree/devtools-cli" alt="License">
 </p>
 
 ## Install
 
 ```bash
-npm install -g @yvng-jie/devtools-cli
+npm install -g @yangfree/devtools-cli
 # or with pnpm
-pnpm add -g @yvng-jie/devtools-cli
+pnpm add -g @yangfree/devtools-cli
 ```
 
 Or use directly without installing:
 
 ```bash
-npx @yvng-jie/devtools-cli
+npx @yangfree/devtools-cli
 ```
 
 ## Usage
