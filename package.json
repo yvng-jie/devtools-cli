@@ -1,0 +1,60 @@
+{
+  "name": "@yvng-jie/devtools-cli",
+  "version": "0.1.0",
+  "description": "Handy developer tools for your terminal — uuid, base64, jwt, color, hash & more",
+  "type": "module",
+  "bin": {
+    "dt": "./dist/index.js",
+    "devtools": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "pnpm build",
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "cli",
+    "devtools",
+    "uuid",
+    "base64",
+    "jwt",
+    "color-converter",
+    "hash",
+    "terminal"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yvng-jie/devtools-cli"
+  },
+  "homepage": "https://github.com/yvng-jie/devtools-cli#readme",
+  "bugs": {
+    "url": "https://github.com/yvng-jie/devtools-cli/issues"
+  },
+  "license": "MIT",
+  "author": "yvng-jie",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.0.0",
+    "eslint": "^10.4.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^3.0.0"
+  }
+}
