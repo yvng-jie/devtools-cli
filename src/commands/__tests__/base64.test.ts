@@ -31,9 +31,10 @@ describe('base64', () => {
     expect(exitSpy).toHaveBeenCalledWith(1)
   })
 
-  it('should still produce output for non-base64 decode input (Node.js Buffer is lenient)', () => {
+  it('should exit on invalid base64 characters in decode mode', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
-    // Node.js Buffer.from with base64 silently ignores invalid chars
-    expect(() => base64(['decode', 'not-base64!!!'])).not.toThrow()
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
+    base64(['decode', 'not-base64!!!'])
+    expect(exitSpy).toHaveBeenCalledWith(1)
   })
 })

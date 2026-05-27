@@ -23,6 +23,15 @@ export function base64(args: string[]) {
     process.exit(1)
   }
 
+  if (action === 'decode') {
+    // Validate base64 characters before decoding
+    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+    if (!base64Regex.test(input.trim())) {
+      console.log(chalk.red('Error: input contains invalid Base64 characters'))
+      process.exit(1)
+    }
+  }
+
   try {
     if (action === 'encode') {
       console.log(Buffer.from(input, 'utf-8').toString('base64'))

@@ -40,7 +40,8 @@ export async function interactive() {
       case '2': {
         const action =
           (await ask(rl, `  ${chalk.yellow('?')} encode or decode? ${chalk.dim('(encode)')}: `)).trim() || 'encode'
-        const input = await ask(rl, `  ${chalk.yellow('?')} Input text: `)
+        const hint = action === 'decode' ? '(base64 string, e.g. aGVsbG8=)' : '(plain text, e.g. hello)'
+        const input = await ask(rl, `  ${chalk.yellow('?')} Input ${hint}: `)
         base64(input ? [action, input] : [action])
         break
       }
