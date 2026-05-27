@@ -5,7 +5,7 @@
 <p align="center">
   <img src="https://img.shields.io/npm/v/@yvng-jie/devtools-cli?color=blue&label=version" alt="npm version">
   <img src="https://img.shields.io/github/actions/workflow/status/yvng-jie/devtools-cli/ci.yml?branch=main" alt="CI">
-  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen" alt="Node version">
+  <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node version">
   <img src="https://img.shields.io/npm/l/@yvng-jie/devtools-cli" alt="License">
 </p>
 
