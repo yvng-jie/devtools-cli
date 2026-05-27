@@ -1,6 +1,7 @@
 {
   "name": "@yvng-jie/devtools-cli",
   "version": "0.1.0",
+  "packageManager": "pnpm@11.1.2",
   "description": "Handy developer tools for your terminal — uuid, base64, jwt, color, hash & more",
   "type": "module",
   "bin": {
