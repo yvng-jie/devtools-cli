@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { uuid } from '../uuid.js'
+import { ExitError } from '../../errors.js'
 
 beforeEach(() => {
   vi.restoreAllMocks()
@@ -30,5 +31,21 @@ describe('uuid', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     uuid(['-c', '2'])
     expect(spy).toHaveBeenCalledTimes(2)
+  })
+
+  it('should exit on invalid --count (non-numeric)', () => {
+    expect(() => uuid(['--count', 'abc'])).toThrow(ExitError)
+  })
+
+  it('should exit on --count 0', () => {
+    expect(() => uuid(['--count', '0'])).toThrow(ExitError)
+  })
+
+  it('should exit on --count negative', () => {
+    expect(() => uuid(['--count', '-5'])).toThrow(ExitError)
+  })
+
+  it('should exit on --count without value', () => {
+    expect(() => uuid(['--count'])).toThrow(ExitError)
   })
 })

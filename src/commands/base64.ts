@@ -1,5 +1,6 @@
 import chalk from 'chalk'
 import { readStdinSync } from '../utils.js'
+import { exitWithError, exitWithUsage } from '../errors.js'
 
 export function base64(args: string[]) {
   const action = args[0]
@@ -10,25 +11,20 @@ export function base64(args: string[]) {
   }
 
   if (action !== 'encode' && action !== 'decode') {
-    console.log(chalk.red('Error: must specify "encode" or "decode"'))
-    console.log(chalk.dim('  Usage: dt base64 <encode|decode> <text>'))
-    console.log(chalk.dim('  Or:    echo <text> | dt base64 <encode|decode>'))
-    process.exit(1)
+    exitWithUsage('must specify "encode" or "decode"', 'dt base64 <encode|decode> <text>')
   }
 
   const input = args.slice(1).join(' ') || readStdinSync()
 
   if (!input) {
-    console.log(chalk.red('Error: no input provided'))
-    process.exit(1)
+    exitWithError('no input provided')
   }
 
   if (action === 'decode') {
     // Validate base64 characters before decoding
     const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
     if (!base64Regex.test(input.trim())) {
-      console.log(chalk.red('Error: input contains invalid Base64 characters'))
-      process.exit(1)
+      exitWithError('input contains invalid Base64 characters')
     }
   }
 
@@ -39,8 +35,7 @@ export function base64(args: string[]) {
       console.log(Buffer.from(input, 'base64').toString('utf-8'))
     }
   } catch {
-    console.log(chalk.red('Error: invalid Base64 input'))
-    process.exit(1)
+    exitWithError('invalid Base64 input')
   }
 }
 

@@ -1,8 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { hash } from '../hash.js'
+import { ExitError } from '../../errors.js'
+
+// Mock readStdinSync to control piped input in tests
+const mockReadStdinSync = vi.hoisted(() => vi.fn())
+vi.mock('../../utils.js', () => ({
+  readStdinSync: mockReadStdinSync,
+}))
 
 beforeEach(() => {
   vi.restoreAllMocks()
+  mockReadStdinSync.mockReset()
 })
 
 describe('hash', () => {
@@ -32,15 +40,29 @@ describe('hash', () => {
     expect(output).toContain('aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d')
   })
 
+  it('should compute hash from stdin pipe', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    mockReadStdinSync.mockReturnValue('hello')
+    hash([])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('SHA256')
+    expect(output).toContain('2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824')
+  })
+
+  it('should handle stdin with --algo', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    mockReadStdinSync.mockReturnValue('hello')
+    hash(['--algo', 'sha512'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('SHA512')
+  })
+
   it('should exit on unsupported algorithm', () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
-    hash(['hello', '--algo', 'md5'])
-    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(() => hash(['hello', '--algo', 'md5'])).toThrow(ExitError)
   })
 
   it('should exit on missing input', () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
-    hash([])
-    expect(exitSpy).toHaveBeenCalledWith(1)
+    mockReadStdinSync.mockReturnValue('')
+    expect(() => hash([])).toThrow(ExitError)
   })
 })

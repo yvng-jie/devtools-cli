@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { jwt } from '../jwt.js'
+import { ExitError } from '../../errors.js'
 
 beforeEach(() => {
   vi.restoreAllMocks()
@@ -15,15 +16,19 @@ describe('jwt', () => {
   })
 
   it('should exit on invalid JWT format', () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
-    jwt(['invalid.token'])
-    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(() => jwt(['invalid.token'])).toThrow(ExitError)
   })
 
   it('should exit on missing token', () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
-    jwt([])
-    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(() => jwt([])).toThrow(ExitError)
+  })
+
+  it('should exit on single-part token', () => {
+    expect(() => jwt(['justonepart'])).toThrow(ExitError)
+  })
+
+  it('should exit on two-part token', () => {
+    expect(() => jwt(['header.payload'])).toThrow(ExitError)
   })
 
   it('should detect expired tokens', () => {
@@ -34,5 +39,13 @@ describe('jwt', () => {
     jwt([`${header}.${payload}.xxx`])
     const output = spy.mock.calls.flatMap((c) => c).join(' ')
     expect(output).toContain('EXPIRED')
+  })
+
+  it('should handle non-numeric exp without crashing', () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')
+    const payload = Buffer.from(JSON.stringify({ name: 'John', exp: 'not-a-number' })).toString('base64url')
+    // Should not throw — just skip expiry display
+    expect(() => jwt([`${header}.${payload}.xxx`])).not.toThrow()
   })
 })

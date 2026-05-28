@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import { exitWithError } from '../errors.js'
 
 export function jwt(args: string[]) {
   if (args[0] === '--help' || args[0] === '-h') {
@@ -8,14 +9,12 @@ export function jwt(args: string[]) {
 
   const input = args.join(' ').trim()
   if (!input) {
-    console.log(chalk.red('Error: provide a JWT token'))
-    process.exit(1)
+    exitWithError('provide a JWT token')
   }
 
   const parts = input.split('.')
   if (parts.length !== 3) {
-    console.log(chalk.red('Error: invalid JWT (expected header.payload.signature)'))
-    process.exit(1)
+    exitWithError('invalid JWT (expected header.payload.signature)')
   }
 
   try {
@@ -53,18 +52,21 @@ export function jwt(args: string[]) {
 
     // Warn if expired
     if (payload.exp) {
-      const exp = new Date(payload.exp * 1000)
-      const now = new Date()
-      if (exp < now) {
-        console.log(`  ${chalk.red.bold('⚠ EXPIRED')} ${chalk.dim(`at ${exp.toISOString()}`)}`)
+      const exp = new Date(Number(payload.exp) * 1000)
+      if (Number.isNaN(exp.getTime())) {
+        console.log(`  ${chalk.yellow('⚠ Invalid expiry value')}`)
       } else {
-        console.log(`  ${chalk.green('✓ Valid until')} ${chalk.dim(exp.toISOString())}`)
+        const now = new Date()
+        if (exp < now) {
+          console.log(`  ${chalk.red.bold('⚠ EXPIRED')} ${chalk.dim(`at ${exp.toISOString()}`)}`)
+        } else {
+          console.log(`  ${chalk.green('✓ Valid until')} ${chalk.dim(exp.toISOString())}`)
+        }
       }
       console.log('')
     }
   } catch {
-    console.log(chalk.red('Error: failed to decode JWT — parts may not be valid base64url'))
-    process.exit(1)
+    exitWithError('failed to decode JWT — parts may not be valid base64url')
   }
 }
 

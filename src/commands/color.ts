@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import { exitWithError } from '../errors.js'
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
@@ -159,8 +160,7 @@ export function color(args: string[]) {
 
   const raw = args.join(' ').trim()
   if (!raw) {
-    console.log(chalk.red('Error: provide a color value'))
-    process.exit(1)
+    exitWithError('provide a color value')
   }
 
   let hex = '',
@@ -201,10 +201,9 @@ export function color(args: string[]) {
   }
 
   if (!rgb) {
-    console.log(chalk.red(`Could not parse: ${raw}`))
-    console.log(chalk.dim('  Supported: HEX (#ff7f50), RGB (rgb(255,127,80)), HSL (hsl(16,100%,66%)), named (coral)'))
-    process.exit(1)
-    return
+    exitWithError(
+      `could not parse "${raw}" — supported: HEX (#ff7f50), RGB (rgb(255,127,80)), HSL (hsl(16,100%,66%)), named (coral)`,
+    )
   }
 
   hsl ??= rgbToHsl(rgb.r, rgb.g, rgb.b)

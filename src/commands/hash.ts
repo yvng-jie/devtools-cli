@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import chalk from 'chalk'
 import { readStdinSync } from '../utils.js'
+import { exitWithError } from '../errors.js'
 
 const ALGOS = ['sha1', 'sha256', 'sha384', 'sha512'] as const
 type Algo = (typeof ALGOS)[number]
@@ -22,9 +23,7 @@ export function hash(args: string[]) {
       algo = raw as Algo
       inputStart = algoIdx + 2
     } else {
-      console.log(chalk.red(`Error: unsupported algorithm "${raw}"`))
-      console.log(chalk.dim(`  Supported: ${ALGOS.join(', ')}`))
-      process.exit(1)
+      exitWithError(`unsupported algorithm "${raw}" (supported: ${ALGOS.join(', ')})`)
     }
   }
 
@@ -39,8 +38,7 @@ export function hash(args: string[]) {
   const finalInput = input || readStdinSync()
 
   if (!finalInput) {
-    console.log(chalk.red('Error: no input provided'))
-    process.exit(1)
+    exitWithError('no input provided')
   }
 
   const hex = createHash(algo).update(finalInput).digest('hex')

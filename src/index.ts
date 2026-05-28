@@ -5,6 +5,7 @@ import { color } from './commands/color.js'
 import { jwt } from './commands/jwt.js'
 import { hash } from './commands/hash.js'
 import { interactive } from './interactive.js'
+import { ExitError } from './errors.js'
 
 async function main() {
   const rawArgs = process.argv.slice(2)
@@ -64,13 +65,14 @@ async function main() {
       hash(args)
       break
     default:
-      console.log(`Unknown command: ${cmd}`)
-      console.log("Run 'dt help' for available commands.")
-      process.exit(1)
+      throw new ExitError(`Unknown command: ${cmd}\n  Run 'dt help' for available commands.`)
   }
 }
 
 main().catch((err) => {
+  if (err instanceof ExitError) {
+    process.exit(1)
+  }
   console.error('Fatal error:', err)
   process.exit(1)
 })

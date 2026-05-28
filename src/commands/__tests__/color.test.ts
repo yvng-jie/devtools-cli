@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { color } from '../color.js'
+import { ExitError } from '../../errors.js'
 
 beforeEach(() => {
   vi.restoreAllMocks()
@@ -15,6 +16,13 @@ describe('color', () => {
     expect(output).toContain('hsl(16, 100%, 66%)')
   })
 
+  it('should parse 3-digit HEX', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['#fff'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('#FFFFFF')
+  })
+
   it('should parse HEX without hash', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
     color(['ff7f50'])
@@ -28,6 +36,13 @@ describe('color', () => {
     const output = spy.mock.calls.flatMap((c) => c).join(' ')
     expect(output).toContain('#FF7F50')
     expect(output).toContain('rgb(255, 127, 80)')
+  })
+
+  it('should parse RGB with extra whitespace', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['rgb( 255 , 127 , 80 )'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('#FF7F50')
   })
 
   it('should parse HSL input', () => {
@@ -46,9 +61,17 @@ describe('color', () => {
   })
 
   it('should exit on unparseable input', () => {
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
     vi.spyOn(console, 'log').mockImplementation(() => {})
-    color(['this-is-not-a-color'])
-    expect(exitSpy).toHaveBeenCalledWith(1)
+    expect(() => color(['this-is-not-a-color'])).toThrow(ExitError)
+  })
+
+  it('should exit on RGB values out of range', () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    expect(() => color(['rgb(256, 0, 0)'])).toThrow(ExitError)
+  })
+
+  it('should exit on HSL values out of range', () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    expect(() => color(['hsl(361, 100%, 50%)'])).toThrow(ExitError)
   })
 })

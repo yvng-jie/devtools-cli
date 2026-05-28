@@ -1,35 +1,65 @@
-# devtools-cli
-
-> Handy developer tools for your terminal — UUID, Base64, JWT, color converter, hash & more.
-
 <p align="center">
   <img src="https://img.shields.io/npm/v/@yangfree/devtools-cli?color=blue&label=version" alt="npm version">
   <img src="https://img.shields.io/github/actions/workflow/status/yvng-jie/devtools-cli/ci.yml?branch=main" alt="CI">
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node version">
   <img src="https://img.shields.io/npm/l/@yangfree/devtools-cli" alt="License">
+  <img src="https://img.shields.io/github/stars/yvng-jie/devtools-cli?style=flat" alt="Stars">
 </p>
 
-## Install
+<h1 align="center">🔧 dt — Developer Toolkit</h1>
+<p align="center">
+  <b>Terminal Swiss Army Knife</b><br>
+  UUID · Base64 · Color Converter · JWT Decoder · SHA Hash — all in one command.
+</p>
+
+<p align="center">
+  <i>No more leaving your terminal to copy-paste into online tools.</i>
+</p>
+
+---
+
+## ✨ Features
+
+<table>
+<tr>
+<td>⚡ <b>Zero setup</b></td>
+<td>Install once, use anywhere with the <code>dt</code> command</td>
+</tr>
+<tr>
+<td>🎮 <b>Interactive mode</b></td>
+<td>Run <code>dt</code> with no args for a guided menu — great for beginners</td>
+</tr>
+<tr>
+<td>🔗 <b>Pipe friendly</b></td>
+<td><code>echo "hello" | dt base64 encode</code> — works with Unix pipelines</td>
+</tr>
+<tr>
+<td>🎨 <b>Beautiful output</b></td>
+<td>Colorful, well-formatted results with chalk</td>
+</tr>
+<tr>
+<td>📦 <b>Zero runtime deps</b></td>
+<td>Only depends on <code>chalk</code> — everything else uses Node.js built-in APIs</td>
+</tr>
+</table>
+
+## 🚀 Install
 
 ```bash
+# Install globally
 npm install -g @yangfree/devtools-cli
-# or with pnpm
-pnpm add -g @yangfree/devtools-cli
-```
 
-Or use directly without installing:
-
-```bash
+# Or use directly without installing
 npx @yangfree/devtools-cli
 ```
 
-## Usage
+## 📖 Usage
 
 ```
 dt <command> [options]
 ```
 
-Or run interactively (no arguments):
+Run without arguments for interactive mode:
 
 ```bash
 dt
@@ -37,62 +67,73 @@ dt
 
 ### Commands
 
-| Command  | Description                      |
-| -------- | -------------------------------- |
-| `uuid`   | Generate random UUID v4          |
-| `base64` | Encode or decode Base64          |
-| `color`  | Convert colors (HEX / RGB / HSL) |
-| `jwt`    | Decode a JWT token               |
-| `hash`   | Generate SHA hashes              |
-| `help`   | Show help message                |
+| Command  | Description                              |
+| -------- | ---------------------------------------- |
+| `uuid`   | Generate random UUID v4                  |
+| `base64` | Encode or decode Base64                  |
+| `color`  | Convert colors (HEX / RGB / HSL / named) |
+| `jwt`    | Decode a JWT token with expiry detection |
+| `hash`   | Generate SHA hashes (sha1/256/384/512)   |
+| `help`   | Show help message                        |
 
-### Examples
+### 📸 Examples
+
+#### UUID
 
 ```bash
-# Interactive mode
-dt
-
-# UUID
 dt uuid
-dt uuid --count 10
+dt uuid --count 5
+```
 
-# Base64
+#### Base64
+
+```bash
 dt base64 encode "hello world"
 dt base64 decode "aGVsbG8gd29ybGQ="
 echo "hello" | dt base64 encode
+```
 
-# Color conversion
+#### Color Converter
+
+```bash
 dt color "#ff7f50"
 dt color "rgb(255, 127, 80)"
 dt color "hsl(16, 100%, 66%)"
 dt color coral
+```
 
-# JWT decode
+#### JWT Decode
+
+```bash
 dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
+```
 
-# Hash
+#### Hash
+
+```bash
 dt hash "hello"
 dt hash "hello" --algo sha512
 echo "hello" | dt hash
 ```
 
-## Development
+## 🛠 Development
 
 ```bash
 git clone https://github.com/yvng-jie/devtools-cli.git
 cd devtools-cli
 pnpm install
-pnpm dev <command>   # dev mode
-pnpm build           # production build
-pnpm test            # run tests
-pnpm lint            # check code style
-pnpm typecheck       # TypeScript check
+
+pnpm dev <command>   # Run in dev mode (e.g. pnpm dev uuid)
+pnpm build           # Production build → dist/
+pnpm test            # Run tests (vitest)
+pnpm lint            # Check code style
+pnpm typecheck       # TypeScript type check
 ```
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+PRs and issues are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## License
+## 📄 License
 
 MIT © [yvng-jie](https://github.com/yvng-jie)

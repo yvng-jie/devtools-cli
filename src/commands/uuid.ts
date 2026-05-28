@@ -1,13 +1,17 @@
 import { randomUUID } from 'node:crypto'
 import chalk from 'chalk'
+import { exitWithError } from '../errors.js'
 
 export function uuid(args: string[]) {
   const countIdx = args.indexOf('--count') !== -1 ? args.indexOf('--count') : args.indexOf('-c')
-  const count = countIdx >= 0 ? Math.min(Number(args[countIdx + 1]) || 1, 100) : 1
-
-  if (count < 1) {
-    console.log(chalk.red('Error: --count must be at least 1'))
-    process.exit(1)
+  let count = 1
+  if (countIdx >= 0) {
+    const raw = args[countIdx + 1]
+    const parsed = Number(raw)
+    if (raw === undefined || !Number.isInteger(parsed) || parsed < 1) {
+      exitWithError('--count must be a positive integer')
+    }
+    count = Math.min(parsed, 100)
   }
 
   for (let i = 0; i < count; i++) {
