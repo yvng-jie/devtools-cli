@@ -5,6 +5,7 @@ import { base64 } from './commands/base64.js'
 import { color } from './commands/color.js'
 import { jwt } from './commands/jwt.js'
 import { hash } from './commands/hash.js'
+import { timestamp } from './commands/timestamp.js'
 import { ExitError } from './errors.js'
 
 function ask(rl: ReturnType<typeof createInterface>, query: string): Promise<string> {
@@ -52,12 +53,13 @@ export async function interactive() {
       console.log(`    ${chalk.green('3)')} color    ${chalk.dim('— Convert colors (HEX / RGB / HSL)')}`)
       console.log(`    ${chalk.green('4)')} jwt      ${chalk.dim('— Decode a JWT token')}`)
       console.log(`    ${chalk.green('5)')} hash     ${chalk.dim('— Generate SHA hash')}`)
+      console.log(`    ${chalk.green('6)')} ts       ${chalk.dim('— Convert Unix timestamps and dates')}`)
       console.log(`    ${chalk.red('0)')} Exit`)
       console.log('')
 
       let choice: string
       try {
-        choice = (await ask(rl, `  ${chalk.yellow('?')} Choose ${chalk.dim('[0-5]')}: `)).trim()
+        choice = (await ask(rl, `  ${chalk.yellow('?')} Choose ${chalk.dim('[0-6]')}: `)).trim()
       } catch {
         // readline closed (e.g. Ctrl+D), exit gracefully
         console.log(`\n  ${chalk.dim('Bye!')}\n`)
@@ -100,6 +102,14 @@ export async function interactive() {
             )
           ).trim()
           runSafe(() => hash(input ? (algo ? [input, '--algo', algo] : [input]) : []))
+          break
+        }
+        case '6': {
+          const input = await ask(
+            rl,
+            `  ${chalk.yellow('?')} Value ${chalk.dim('(timestamp, date string, or "now")')} ${chalk.dim('[now]')}: `,
+          )
+          runSafe(() => timestamp(input ? [input] : []))
           break
         }
         case '0':

@@ -67,14 +67,15 @@ dt
 
 ### Commands
 
-| Command  | Description                              |
-| -------- | ---------------------------------------- |
-| `uuid`   | Generate random UUID v4                  |
-| `base64` | Encode or decode Base64                  |
-| `color`  | Convert colors (HEX / RGB / HSL / named) |
-| `jwt`    | Decode a JWT token with expiry detection |
-| `hash`   | Generate SHA hashes (sha1/256/384/512)   |
-| `help`   | Show help message                        |
+| Command     | Description                               |
+| ----------- | ----------------------------------------- |
+| `uuid`      | Generate random UUID v4                   |
+| `base64`    | Encode or decode Base64                   |
+| `color`     | Convert colors (HEX / RGB / HSL / named)  |
+| `jwt`       | Decode a JWT token with expiry detection  |
+| `hash`      | Generate SHA hashes (sha1/256/384/512)    |
+| `timestamp` | Convert between Unix timestamps and dates |
+| `help`      | Show help message                         |
 
 ### 📸 Examples
 
@@ -114,6 +115,17 @@ dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
 dt hash "hello"
 dt hash "hello" --algo sha512
 echo "hello" | dt hash
+```
+
+#### Timestamp / ts
+
+```bash
+dt ts                         # Current timestamp
+dt ts 1716806400              # Timestamp → readable date
+dt ts "2026-05-28"            # Date → timestamp
+dt ts 1716806400 --utc        # UTC time
+dt ts 1716806400 --iso        # ISO 8601 format
+echo 1716806400 | dt ts       # Pipe input
 ```
 
 ## 🛠 Development

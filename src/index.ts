@@ -4,6 +4,7 @@ import { base64 } from './commands/base64.js'
 import { color } from './commands/color.js'
 import { jwt } from './commands/jwt.js'
 import { hash } from './commands/hash.js'
+import { timestamp, timestampHelp } from './commands/timestamp.js'
 import { interactive } from './interactive.js'
 import { ExitError } from './errors.js'
 
@@ -36,6 +37,10 @@ async function main() {
       case 'hash':
         hash(args)
         return
+      case 'timestamp':
+      case 'ts':
+        timestampHelp()
+        return
     }
   }
 
@@ -63,6 +68,10 @@ async function main() {
       break
     case 'hash':
       hash(args)
+      break
+    case 'timestamp':
+    case 'ts':
+      timestamp(args)
       break
     default:
       throw new ExitError(`Unknown command: ${cmd}\n  Run 'dt help' for available commands.`)

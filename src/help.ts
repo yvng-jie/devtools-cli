@@ -19,6 +19,7 @@ export function showHelp() {
   console.log(`    ${chalk.green('color')}       ${chalk.dim('Convert colors (HEX / RGB / HSL / named)')}`)
   console.log(`    ${chalk.green('jwt')}         ${chalk.dim('Decode a JWT token')}`)
   console.log(`    ${chalk.green('hash')}        ${chalk.dim('Generate SHA hashes')}`)
+  console.log(`    ${chalk.green('timestamp')}   ${chalk.dim('Convert Unix timestamps and dates')}`)
   console.log(`    ${chalk.green('help')}        ${chalk.dim('Show this help')}`)
   console.log('')
   console.log(`  ${chalk.yellow('Examples:')}`)
@@ -30,6 +31,7 @@ export function showHelp() {
   console.log(`    dt color "rgb(255,127,80)"`)
   console.log(`    dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"`)
   console.log(`    dt hash "hello" --algo sha256`)
+  console.log(`    dt ts 1716806400`)
   console.log(`    echo "hello" | dt base64 encode`)
   console.log('')
   console.log(`  ${chalk.dim('MIT License · github.com/yvng-jie/devtools-cli')}`)
@@ -38,5 +40,5 @@ export function showHelp() {
 }
 
 export function showVersion() {
-  console.log('dt v0.1.0')
+  console.log('dt v0.2.0')
 }
