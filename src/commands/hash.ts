@@ -12,16 +12,17 @@ export function hash(args: string[]) {
     return
   }
 
+  const jsonMode = args.includes('--json')
+  const filteredArgs = args.filter((a) => a !== '--json')
+
   let algo: Algo = 'sha256'
-  let inputStart = 0
 
   // Parse --algo / -a
-  const algoIdx = args.indexOf('--algo') !== -1 ? args.indexOf('--algo') : args.indexOf('-a')
+  const algoIdx = filteredArgs.indexOf('--algo') !== -1 ? filteredArgs.indexOf('--algo') : filteredArgs.indexOf('-a')
   if (algoIdx >= 0) {
-    const raw = args[algoIdx + 1]?.toLowerCase()
+    const raw = filteredArgs[algoIdx + 1]?.toLowerCase()
     if (raw && ALGOS.includes(raw as Algo)) {
       algo = raw as Algo
-      inputStart = algoIdx + 2
     } else {
       exitWithError(`unsupported algorithm "${raw}" (supported: ${ALGOS.join(', ')})`)
     }
@@ -30,11 +31,11 @@ export function hash(args: string[]) {
   // Exclude --algo/-a and its value, take everything else as input
   const input =
     algoIdx >= 0
-      ? args
+      ? filteredArgs
           .slice(0, algoIdx)
-          .concat(args.slice(algoIdx + 2))
+          .concat(filteredArgs.slice(algoIdx + 2))
           .join(' ')
-      : args.slice(inputStart).join(' ')
+      : filteredArgs.join(' ')
   const finalInput = input || readStdinSync()
 
   if (!finalInput) {
@@ -42,6 +43,11 @@ export function hash(args: string[]) {
   }
 
   const hex = createHash(algo).update(finalInput).digest('hex')
+
+  if (jsonMode) {
+    console.log(JSON.stringify({ algorithm: algo.toUpperCase(), input: finalInput, hash: hex }))
+    return
+  }
 
   console.log('')
   console.log(`  ${chalk.dim('Algorithm:')} ${chalk.yellow(algo.toUpperCase())}`)

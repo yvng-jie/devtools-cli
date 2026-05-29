@@ -3,7 +3,9 @@ import { readStdinSync } from '../utils.js'
 import { exitWithError, exitWithUsage } from '../errors.js'
 
 export function base64(args: string[]) {
-  const action = args[0]
+  const jsonMode = args.includes('--json')
+  const filteredArgs = args.filter((a) => a !== '--json')
+  const action = filteredArgs[0]
 
   if (action === '--help' || action === '-h') {
     base64Help()
@@ -14,7 +16,7 @@ export function base64(args: string[]) {
     exitWithUsage('must specify "encode" or "decode"', 'dt base64 <encode|decode> <text>')
   }
 
-  const input = args.slice(1).join(' ') || readStdinSync()
+  const input = filteredArgs.slice(1).join(' ') || readStdinSync()
 
   if (!input) {
     exitWithError('no input provided')
@@ -29,10 +31,15 @@ export function base64(args: string[]) {
   }
 
   try {
-    if (action === 'encode') {
-      console.log(Buffer.from(input, 'utf-8').toString('base64'))
+    const output =
+      action === 'encode'
+        ? Buffer.from(input, 'utf-8').toString('base64')
+        : Buffer.from(input, 'base64').toString('utf-8')
+
+    if (jsonMode) {
+      console.log(JSON.stringify({ action, input, output }))
     } else {
-      console.log(Buffer.from(input, 'base64').toString('utf-8'))
+      console.log(output)
     }
   } catch {
     exitWithError('invalid Base64 input')

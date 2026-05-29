@@ -40,5 +40,5 @@ export function showHelp() {
 }
 
 export function showVersion() {
-  console.log('dt v0.2.0')
+  console.log('dt v0.3.0')
 }

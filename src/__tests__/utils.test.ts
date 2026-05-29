@@ -7,8 +7,20 @@ beforeEach(() => {
 
 describe('readStdinSync', () => {
   it('should return empty string when stdin is a TTY', () => {
-    // In the test runner, isTTY is not a real getter, so we test
-    // the function's behavior by verifying it exists and is callable
-    expect(typeof utils.readStdinSync).toBe('function')
+    const origDesc = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true })
+
+    const result = utils.readStdinSync()
+    expect(result).toBe('')
+
+    restoreIsTTY(origDesc)
   })
 })
+
+function restoreIsTTY(origDesc: PropertyDescriptor | undefined) {
+  if (origDesc) {
+    Object.defineProperty(process.stdin, 'isTTY', origDesc)
+  } else {
+    delete (process.stdin as any).isTTY
+  }
+}

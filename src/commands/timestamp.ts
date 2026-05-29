@@ -50,12 +50,15 @@ export function timestamp(args: string[]) {
     return
   }
 
+  const jsonMode = args.includes('--json')
+  const filteredArgs = args.filter((a) => a !== '--json')
+
   // Extract flags
-  const useUtc = args.includes('--utc')
-  const useIso = args.includes('--iso')
+  const useUtc = filteredArgs.includes('--utc')
+  const useIso = filteredArgs.includes('--iso')
 
   // Get input: first non-flag arg, or pipe, or default to "now"
-  const inputArg = args.find((a) => a !== '--utc' && a !== '--iso' && a !== '-h' && a !== '--help')
+  const inputArg = filteredArgs.find((a) => a !== '--utc' && a !== '--iso' && a !== '-h' && a !== '--help')
   const rawInput = inputArg ?? readStdinSync() ?? ''
   const input = rawInput.trim() || 'now'
 
@@ -66,6 +69,18 @@ export function timestamp(args: string[]) {
   }
 
   const unixSeconds = Math.floor(date.getTime() / 1000)
+
+  if (jsonMode) {
+    console.log(
+      JSON.stringify({
+        unix: unixSeconds,
+        iso: date.toISOString(),
+        local: formatLocal(date),
+        utc: formatUtc(date),
+      }),
+    )
+    return
+  }
 
   // Output
   console.log('')

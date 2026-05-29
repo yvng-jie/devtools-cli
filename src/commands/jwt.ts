@@ -7,7 +7,10 @@ export function jwt(args: string[]) {
     return
   }
 
-  const input = args.join(' ').trim()
+  const jsonMode = args.includes('--json')
+  const filteredArgs = args.filter((a) => a !== '--json')
+
+  const input = filteredArgs.join(' ').trim()
   if (!input) {
     exitWithError('provide a JWT token')
   }
@@ -20,6 +23,22 @@ export function jwt(args: string[]) {
   try {
     const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf-8'))
     const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'))
+
+    // Compute expiry info
+    let expired: boolean | null = null
+    let expiresAt: string | null = null
+    if (payload.exp != null) {
+      const exp = new Date(Number(payload.exp) * 1000)
+      if (!Number.isNaN(exp.getTime())) {
+        expired = exp < new Date()
+        expiresAt = exp.toISOString()
+      }
+    }
+
+    if (jsonMode) {
+      console.log(JSON.stringify({ header, payload, signature: parts[2], expired, expiresAt }))
+      return
+    }
 
     const headerStr = JSON.stringify(header, null, 2)
     const payloadStr = JSON.stringify(payload, null, 2)
@@ -51,17 +70,11 @@ export function jwt(args: string[]) {
     console.log('')
 
     // Warn if expired
-    if (payload.exp) {
-      const exp = new Date(Number(payload.exp) * 1000)
-      if (Number.isNaN(exp.getTime())) {
-        console.log(`  ${chalk.yellow('⚠ Invalid expiry value')}`)
+    if (expired != null) {
+      if (expired) {
+        console.log(`  ${chalk.red.bold('⚠ EXPIRED')} ${chalk.dim(`at ${expiresAt}`)}`)
       } else {
-        const now = new Date()
-        if (exp < now) {
-          console.log(`  ${chalk.red.bold('⚠ EXPIRED')} ${chalk.dim(`at ${exp.toISOString()}`)}`)
-        } else {
-          console.log(`  ${chalk.green('✓ Valid until')} ${chalk.dim(exp.toISOString())}`)
-        }
+        console.log(`  ${chalk.green('✓ Valid until')} ${chalk.dim(expiresAt)}`)
       }
       console.log('')
     }

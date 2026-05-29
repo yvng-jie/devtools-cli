@@ -19,33 +19,28 @@ async function main() {
     return
   }
 
-  // Handle --help / -h on specific commands
-  if (args[0] === '--help' || args[0] === '-h') {
-    switch (cmd) {
-      case 'uuid':
-        uuidHelp()
-        return
-      case 'jwt':
-        jwt(args)
-        return
-      case 'color':
-        color(args)
-        return
-      case 'base64':
-        base64(args)
-        return
-      case 'hash':
-        hash(args)
-        return
-      case 'timestamp':
-      case 'ts':
-        timestampHelp()
-        return
-    }
-  }
-
   switch (cmd) {
-    case 'help':
+    case 'help': {
+      // dt help <command> — show specific help
+      const helpCmd = args[0]
+      if (helpCmd) {
+        const helpMap: Record<string, () => void> = {
+          uuid: uuidHelp,
+          base64: () => base64(['--help']),
+          color: () => color(['--help']),
+          jwt: () => jwt(['--help']),
+          hash: () => hash(['--help']),
+          timestamp: timestampHelp,
+          ts: timestampHelp,
+        }
+        if (helpMap[helpCmd]) {
+          helpMap[helpCmd]()
+          break
+        }
+      }
+      showHelp()
+      break
+    }
     case '--help':
     case '-h':
       showHelp()

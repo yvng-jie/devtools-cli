@@ -3,10 +3,18 @@ import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
 
 export function uuid(args: string[]) {
-  const countIdx = args.indexOf('--count') !== -1 ? args.indexOf('--count') : args.indexOf('-c')
+  if (args[0] === '--help' || args[0] === '-h') {
+    uuidHelp()
+    return
+  }
+
+  const jsonMode = args.includes('--json')
+  const filteredArgs = args.filter((a) => a !== '--json')
+
+  const countIdx = filteredArgs.indexOf('--count') !== -1 ? filteredArgs.indexOf('--count') : filteredArgs.indexOf('-c')
   let count = 1
   if (countIdx >= 0) {
-    const raw = args[countIdx + 1]
+    const raw = filteredArgs[countIdx + 1]
     const parsed = Number(raw)
     if (raw === undefined || !Number.isInteger(parsed) || parsed < 1) {
       exitWithError('--count must be a positive integer')
@@ -14,8 +22,14 @@ export function uuid(args: string[]) {
     count = Math.min(parsed, 100)
   }
 
-  for (let i = 0; i < count; i++) {
-    console.log(chalk.green(randomUUID()))
+  const uuids = Array.from({ length: count }, () => randomUUID())
+
+  if (jsonMode) {
+    console.log(JSON.stringify({ uuids }))
+  } else {
+    for (const id of uuids) {
+      console.log(chalk.green(id))
+    }
   }
 }
 

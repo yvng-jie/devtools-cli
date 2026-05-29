@@ -30,8 +30,16 @@
 <td>Run <code>dt</code> with no args for a guided menu — great for beginners</td>
 </tr>
 <tr>
+<td>⌨️ <b>Keyboard shortcuts</b></td>
+<td>Interactive mode supports letter keys (<code>u</code>/<code>b</code>/<code>c</code>/<code>j</code>/<code>h</code>/<code>t</code>) and <code>b</code> to go back</td>
+</tr>
+<tr>
 <td>🔗 <b>Pipe friendly</b></td>
 <td><code>echo "hello" | dt base64 encode</code> — works with Unix pipelines</td>
+</tr>
+<tr>
+<td>📋 <b>JSON output</b></td>
+<td>Add <code>--json</code> for machine-readable output, pipeable to <code>jq</code></td>
 </tr>
 <tr>
 <td>🎨 <b>Beautiful output</b></td>
@@ -65,6 +73,14 @@ Run without arguments for interactive mode:
 dt
 ```
 
+Get help for any command:
+
+```bash
+dt help               # Show main help
+dt help uuid          # Show help for a specific command
+dt uuid --help        # Same as above
+```
+
 ### Commands
 
 | Command     | Description                               |
@@ -77,6 +93,8 @@ dt
 | `timestamp` | Convert between Unix timestamps and dates |
 | `help`      | Show help message                         |
 
+All commands support `--json` for structured JSON output.
+
 ### 📸 Examples
 
 #### UUID
@@ -84,6 +102,7 @@ dt
 ```bash
 dt uuid
 dt uuid --count 5
+dt uuid --count 3 --json        # → {"uuids":["...","...","..."]}
 ```
 
 #### Base64
@@ -92,6 +111,7 @@ dt uuid --count 5
 dt base64 encode "hello world"
 dt base64 decode "aGVsbG8gd29ybGQ="
 echo "hello" | dt base64 encode
+dt base64 encode "hello" --json # → {"action":"encode","input":"hello","output":"aGVsbG8="}
 ```
 
 #### Color Converter
@@ -101,12 +121,14 @@ dt color "#ff7f50"
 dt color "rgb(255, 127, 80)"
 dt color "hsl(16, 100%, 66%)"
 dt color coral
+dt color coral --json           # → {"hex":"#FF7F50","rgb":"rgb(255,127,80)","hsl":"hsl(16,100%,66%)"}
 ```
 
 #### JWT Decode
 
 ```bash
 dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
+dt jwt <token> --json           # → {"header":{...},"payload":{...},"expired":true/false}
 ```
 
 #### Hash
@@ -115,6 +137,7 @@ dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
 dt hash "hello"
 dt hash "hello" --algo sha512
 echo "hello" | dt hash
+dt hash "hello" --json          # → {"algorithm":"SHA256","input":"hello","hash":"2cf2..."}
 ```
 
 #### Timestamp / ts
@@ -125,6 +148,7 @@ dt ts 1716806400              # Timestamp → readable date
 dt ts "2026-05-28"            # Date → timestamp
 dt ts 1716806400 --utc        # UTC time
 dt ts 1716806400 --iso        # ISO 8601 format
+dt ts now --json              # → {"unix":...,"iso":"...","local":"...","utc":"..."}
 echo 1716806400 | dt ts       # Pipe input
 ```
 
