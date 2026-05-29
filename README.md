@@ -16,6 +16,10 @@
   <i>No more leaving your terminal to copy-paste into online tools.</i>
 </p>
 
+<p align="center">
+  <img src="./assets/demo.gif" alt="dt demo" width="700">
+</p>
+
 ---
 
 ## ✨ Features
