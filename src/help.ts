@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import { version } from '../package.json'
 
 const HEADER = `
 ${chalk.bold.cyan('  █▀▄ █▀▀ █░█ ▀█▀ █▀█ █▀█ █░░ █▀   █▀▀ █░░ █')}
@@ -40,5 +41,5 @@ export function showHelp() {
 }
 
 export function showVersion() {
-  console.log('dt v0.3.0')
+  console.log(`devkits v${version} (dt)`)
 }

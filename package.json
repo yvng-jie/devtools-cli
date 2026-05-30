@@ -5,8 +5,7 @@
   "description": "Handy developer tools for your terminal — uuid, base64, jwt, color, hash & more",
   "type": "module",
   "bin": {
-    "dt": "./dist/index.js",
-    "devtools": "./dist/index.js"
+    "dt": "./dist/index.js"
   },
   "files": [
     "dist"
