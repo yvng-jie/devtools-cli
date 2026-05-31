@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
 import { readStdinSync } from '../utils.js'
+import type { Command } from './types.js'
 
 /**
  * Format a Date object to a local date-time string (YYYY-MM-DD HH:mm:ss).
@@ -45,11 +46,6 @@ function parseDateInput(input: string): Date | null {
 }
 
 export function timestamp(args: string[]) {
-  if (args[0] === '--help' || args[0] === '-h') {
-    timestampHelp()
-    return
-  }
-
   const jsonMode = args.includes('--json')
   const filteredArgs = args.filter((a) => a !== '--json')
 
@@ -118,4 +114,12 @@ export function timestampHelp() {
   console.log('    dt ts 1716806400 --utc  UTC time')
   console.log('    echo 1716806400 | dt ts Pipe input')
   console.log('')
+}
+
+export const timestampCommand: Command = {
+  name: 'timestamp',
+  aliases: ['ts'],
+  description: 'Convert between Unix timestamps and dates',
+  run: timestamp,
+  help: timestampHelp,
 }

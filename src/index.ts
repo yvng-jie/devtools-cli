@@ -1,10 +1,5 @@
 import { showHelp, showVersion } from './help.js'
-import { uuid, uuidHelp } from './commands/uuid.js'
-import { base64 } from './commands/base64.js'
-import { color } from './commands/color.js'
-import { jwt } from './commands/jwt.js'
-import { hash } from './commands/hash.js'
-import { timestamp, timestampHelp } from './commands/timestamp.js'
+import { commands, findCommand } from './commands/index.js'
 import { interactive } from './interactive.js'
 import { ExitError } from './errors.js'
 
@@ -19,58 +14,42 @@ async function main() {
     return
   }
 
-  switch (cmd) {
-    case 'help': {
-      // dt help <command> — show specific help
-      const helpCmd = args[0]
-      if (helpCmd) {
-        const helpMap: Record<string, () => void> = {
-          uuid: uuidHelp,
-          base64: () => base64(['--help']),
-          color: () => color(['--help']),
-          jwt: () => jwt(['--help']),
-          hash: () => hash(['--help']),
-          timestamp: timestampHelp,
-          ts: timestampHelp,
-        }
-        if (helpMap[helpCmd]) {
-          helpMap[helpCmd]()
-          break
-        }
-      }
-      showHelp()
-      break
-    }
-    case '--help':
-    case '-h':
-      showHelp()
-      break
-    case '--version':
-    case '-v':
-      showVersion()
-      break
-    case 'uuid':
-      uuid(args)
-      break
-    case 'base64':
-      base64(args)
-      break
-    case 'color':
-      color(args)
-      break
-    case 'jwt':
-      jwt(args)
-      break
-    case 'hash':
-      hash(args)
-      break
-    case 'timestamp':
-    case 'ts':
-      timestamp(args)
-      break
-    default:
-      throw new ExitError(`Unknown command: ${cmd}\n  Run 'dt help' for available commands.`)
+  // Global help / version
+  if (cmd === '--help' || cmd === '-h') {
+    showHelp(commands)
+    return
   }
+  if (cmd === '--version' || cmd === '-v') {
+    showVersion()
+    return
+  }
+
+  // Handle `help` subcommand: dt help <cmd> or dt help
+  if (cmd === 'help') {
+    if (args[0]) {
+      const found = findCommand(args[0])
+      if (found) {
+        found.help()
+        return
+      }
+    }
+    showHelp(commands)
+    return
+  }
+
+  // Find and run the command
+  const found = findCommand(cmd)
+  if (found) {
+    // Intercept --help/-h and show command-specific help
+    if (args.includes('--help') || args.includes('-h')) {
+      found.help()
+      return
+    }
+    found.run(args)
+    return
+  }
+
+  throw new ExitError(`Unknown command: ${cmd}\n  Run 'dt help' for available commands.`)
 }
 
 main().catch((err) => {

@@ -1,12 +1,8 @@
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
+import type { Command } from './types.js'
 
 export function jwt(args: string[]) {
-  if (args[0] === '--help' || args[0] === '-h') {
-    jwtHelp()
-    return
-  }
-
   const jsonMode = args.includes('--json')
   const filteredArgs = args.filter((a) => a !== '--json')
 
@@ -93,4 +89,12 @@ function jwtHelp() {
   console.log(`  ${chalk.yellow('Examples:')}`)
   console.log('    dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"')
   console.log('')
+}
+
+export const jwtCommand: Command = {
+  name: 'jwt',
+  aliases: [],
+  description: 'Decode a JWT token with expiry detection',
+  run: jwt,
+  help: jwtHelp,
 }

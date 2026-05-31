@@ -73,13 +73,6 @@ describe('timestamp', () => {
     expect(() => timestamp(['not-a-date'])).toThrow(ExitError)
   })
 
-  it('should show help with --help flag', () => {
-    const output = captureOutput(() => timestamp(['--help']))
-    expect(output).toContain('timestamp / ts')
-  })
-
-  it('should show help with -h flag', () => {
-    const output = captureOutput(() => timestamp(['-h']))
-    expect(output).toContain('timestamp / ts')
-  })
+  // --help / -h are now handled by the router (src/index.ts),
+  // not by the command function itself.
 })

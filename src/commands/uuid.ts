@@ -1,13 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
+import type { Command } from './types.js'
 
 export function uuid(args: string[]) {
-  if (args[0] === '--help' || args[0] === '-h') {
-    uuidHelp()
-    return
-  }
-
   const jsonMode = args.includes('--json')
   const filteredArgs = args.filter((a) => a !== '--json')
 
@@ -33,7 +29,7 @@ export function uuid(args: string[]) {
   }
 }
 
-export function uuidHelp() {
+function uuidHelp() {
   console.log(chalk.bold('\n  uuid — Generate random UUID v4'))
   console.log(`  ${chalk.dim('───')}`)
   console.log('')
@@ -47,4 +43,11 @@ export function uuidHelp() {
   console.log('    dt uuid')
   console.log('    dt uuid --count 10')
   console.log('')
+}
+export const uuidCommand: Command = {
+  name: 'uuid',
+  aliases: [],
+  description: 'Generate random UUID v4',
+  run: uuid,
+  help: uuidHelp,
 }

@@ -1,5 +1,6 @@
 import chalk from 'chalk'
 import { version } from '../package.json'
+import type { Command } from './commands/types.js'
 
 const HEADER = `
 ${chalk.bold.cyan('  █▀▄ █▀▀ █░█ ▀█▀ █▀█ █▀█ █░░ █▀   █▀▀ █░░ █')}
@@ -7,7 +8,7 @@ ${chalk.bold.cyan('  █▄▀ ██▀ ▀▄▀ ░█░ █▄█ █▄█
 ${chalk.dim('  ─────────────────────────────────────────')}
 `
 
-export function showHelp() {
+export function showHelp(cmds?: Command[]) {
   console.log(HEADER)
   console.log(`  ${chalk.bold('Handy developer tools for your terminal.')}`)
   console.log('')
@@ -15,12 +16,13 @@ export function showHelp() {
   console.log(`    dt ${chalk.dim('<command>')} ${chalk.dim('[options]')}`)
   console.log('')
   console.log(`  ${chalk.yellow('Commands:')}`)
-  console.log(`    ${chalk.green('uuid')}        ${chalk.dim('Generate random UUID v4')}`)
-  console.log(`    ${chalk.green('base64')}      ${chalk.dim('Encode or decode Base64')}`)
-  console.log(`    ${chalk.green('color')}       ${chalk.dim('Convert colors (HEX / RGB / HSL / named)')}`)
-  console.log(`    ${chalk.green('jwt')}         ${chalk.dim('Decode a JWT token')}`)
-  console.log(`    ${chalk.green('hash')}        ${chalk.dim('Generate SHA hashes')}`)
-  console.log(`    ${chalk.green('timestamp')}   ${chalk.dim('Convert Unix timestamps and dates')}`)
+  if (cmds) {
+    for (const cmd of cmds) {
+      const names =
+        cmd.aliases.length > 0 ? `${chalk.green(cmd.name)} / ${chalk.green(cmd.aliases[0])}` : chalk.green(cmd.name)
+      console.log(`    ${names.padEnd(22)} ${chalk.dim(cmd.description)}`)
+    }
+  }
   console.log(`    ${chalk.green('help')}        ${chalk.dim('Show this help')}`)
   console.log('')
   console.log(`  ${chalk.yellow('Examples:')}`)

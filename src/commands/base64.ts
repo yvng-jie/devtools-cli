@@ -1,16 +1,12 @@
 import chalk from 'chalk'
 import { readStdinSync } from '../utils.js'
 import { exitWithError, exitWithUsage } from '../errors.js'
+import type { Command } from './types.js'
 
 export function base64(args: string[]) {
   const jsonMode = args.includes('--json')
   const filteredArgs = args.filter((a) => a !== '--json')
   const action = filteredArgs[0]
-
-  if (action === '--help' || action === '-h') {
-    base64Help()
-    return
-  }
 
   if (action !== 'encode' && action !== 'decode') {
     exitWithUsage('must specify "encode" or "decode"', 'dt base64 <encode|decode> <text>')
@@ -59,4 +55,12 @@ function base64Help() {
   console.log('    dt base64 decode "aGVsbG8gd29ybGQ="')
   console.log('    echo "hello" | dt base64 encode')
   console.log('')
+}
+
+export const base64Command: Command = {
+  name: 'base64',
+  aliases: [],
+  description: 'Encode or decode Base64',
+  run: base64,
+  help: base64Help,
 }

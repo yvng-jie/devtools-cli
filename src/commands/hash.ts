@@ -2,16 +2,12 @@ import { createHash } from 'node:crypto'
 import chalk from 'chalk'
 import { readStdinSync } from '../utils.js'
 import { exitWithError } from '../errors.js'
+import type { Command } from './types.js'
 
 const ALGOS = ['sha1', 'sha256', 'sha384', 'sha512'] as const
 type Algo = (typeof ALGOS)[number]
 
 export function hash(args: string[]) {
-  if (args[0] === '--help' || args[0] === '-h') {
-    hashHelp()
-    return
-  }
-
   const jsonMode = args.includes('--json')
   const filteredArgs = args.filter((a) => a !== '--json')
 
@@ -77,4 +73,12 @@ function hashHelp() {
   console.log('    dt hash "hello" --algo sha512')
   console.log('    echo "hello" | dt hash')
   console.log('')
+}
+
+export const hashCommand: Command = {
+  name: 'hash',
+  aliases: [],
+  description: 'Generate SHA hashes (sha1/256/384/512)',
+  run: hash,
+  help: hashHelp,
 }
