@@ -35,7 +35,7 @@
 </tr>
 <tr>
 <td>⌨️ <b>Keyboard shortcuts</b></td>
-<td>Interactive mode supports letter keys (<code>u</code>/<code>b</code>/<code>c</code>/<code>j</code>/<code>h</code>/<code>t</code>) and <code>b</code> to go back</td>
+<td>Interactive mode supports number keys, letter keys (<code>u</code>/<code>b</code>/<code>c</code>/<code>j</code>/<code>h</code>/<code>t</code>), and <code>b</code>/<code>back</code> to go back</td>
 </tr>
 <tr>
 <td>🔗 <b>Pipe friendly</b></td>
@@ -87,15 +87,15 @@ dt uuid --help        # Same as above
 
 ### Commands
 
-| Command     | Description                               |
-| ----------- | ----------------------------------------- |
-| `uuid`      | Generate random UUID v4                   |
-| `base64`    | Encode or decode Base64                   |
-| `color`     | Convert colors (HEX / RGB / HSL / named)  |
-| `jwt`       | Decode a JWT token with expiry detection  |
-| `hash`      | Generate SHA hashes (sha1/256/384/512)    |
-| `timestamp` | Convert between Unix timestamps and dates |
-| `help`      | Show help message                         |
+| Command     | Alias | Description                               |
+| ----------- | ----- | ----------------------------------------- |
+| `uuid`      | —     | Generate random UUID v4                   |
+| `base64`    | —     | Encode or decode Base64                   |
+| `color`     | —     | Convert colors (HEX / RGB / HSL / named)  |
+| `jwt`       | —     | Decode a JWT token with expiry detection  |
+| `hash`      | —     | Generate SHA hashes (sha1/256/384/512)    |
+| `timestamp` | `ts`  | Convert between Unix timestamps and dates |
+| `help`      | —     | Show help message                         |
 
 All commands support `--json` for structured JSON output.
 
@@ -106,6 +106,7 @@ All commands support `--json` for structured JSON output.
 ```bash
 dt uuid
 dt uuid --count 5
+dt uuid -c 5                     # Same as --count 5
 dt uuid --count 3 --json        # → {"uuids":["...","...","..."]}
 ```
 
@@ -140,6 +141,7 @@ dt jwt <token> --json           # → {"header":{...},"payload":{...},"expired":
 ```bash
 dt hash "hello"
 dt hash "hello" --algo sha512
+dt hash "hello" -a sha512       # Same as --algo sha512
 echo "hello" | dt hash
 dt hash "hello" --json          # → {"algorithm":"SHA256","input":"hello","hash":"2cf2..."}
 ```
