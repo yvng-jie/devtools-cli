@@ -1,15 +1,30 @@
 ---
-name: Feature request
+name: "\U0001F4A1 Feature request"
 about: Suggest an idea for this project
-title: ''
+title: '[Feature] '
 labels: enhancement
 assignees: ''
 ---
 
-**Is your feature request related to a problem?** A clear and concise description of what the problem is.
+## Problem
 
-**Describe the solution you'd like** What you want to happen.
+A clear and concise description of what problem this feature would solve. Ex. _I'm always frustrated when [...]_
 
-**Describe alternatives you've considered** Any alternative solutions or features you've considered.
+## Proposed solution
 
-**Additional context** Add any other context or screenshots here.
+What you'd like to happen. Be specific about the CLI interface:
+
+```bash
+# Expected usage
+dt <new-command> <args>
+dt <new-command> <args> --json    # JSON output
+echo "input" | dt <new-command>   # Pipe support
+```
+
+## Alternatives considered
+
+Any alternative solutions or features you've considered.
+
+## Additional context
+
+Add any other context, screenshots, or references here.

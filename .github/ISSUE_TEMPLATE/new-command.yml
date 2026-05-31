@@ -1,0 +1,83 @@
+name: '✨ New command'
+description: Suggest or request a new CLI command for dt
+title: '[Feature] `dt <command>` — '
+labels: ['enhancement', 'good first issue']
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new command! After this issue is created, see
+        [CONTRIBUTING.md](https://github.com/yvng-jie/devtools-cli/blob/main/CONTRIBUTING.md)
+        for a step-by-step implementation guide.
+
+  - type: input
+    id: command_name
+    attributes:
+      label: Command name
+      description: What should the command be called?
+      placeholder: e.g. url, password, case, ip
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What does this command do?
+      placeholder: e.g. Encode or decode URL strings
+    validations:
+      required: true
+
+  - type: textarea
+    id: usage
+    attributes:
+      label: Usage examples
+      description: Show how the command should work
+      placeholder: |
+        dt url encode "hello world"
+        dt url decode "hello%20world"
+        echo "hello" | dt url encode
+        dt url encode "hello" --json
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Options / Flags (optional)
+      description: Any flags the command should support?
+      placeholder: |
+        --length, -l    Password length (default: 16)
+        --count, -c     Number of items (default: 1)
+        --no-symbols    Exclude special characters
+      render: text
+
+  - type: dropdown
+    id: interactive
+    attributes:
+      label: Interactive mode prompts
+      description: Does this command need custom prompts in interactive mode?
+      options:
+        - 'No — just pass arguments directly'
+        - 'Yes — needs custom prompts (describe above)'
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Implementation checklist
+      description: All new commands should support these
+      options:
+        - label: CLI mode (`dt <command> <args>`)
+          required: true
+        - label: Help text (`dt <command> --help`)
+          required: true
+        - label: JSON output (`--json` flag)
+          required: true
+        - label: Pipe support (`echo x | dt <command>`)
+          required: false
+        - label: Unit tests
+          required: true
