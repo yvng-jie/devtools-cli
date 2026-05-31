@@ -7,47 +7,47 @@ Set TypingSpeed 50ms
 Set Framerate 15
 Set PlaybackSpeed 1.5
 
-Type "node dist/index.js help"
+Type "dt help"
 Sleep 500ms
 Enter
 Sleep 2s
 Ctrl+l
 
-Type "node dist/index.js uuid"
+Type "dt uuid"
 Sleep 300ms
 Enter
 Sleep 1.5s
-Type "node dist/index.js uuid --count 3"
+Type "dt uuid --count 3"
 Sleep 300ms
 Enter
 Sleep 1.5s
 Ctrl+l
 
-Type "node dist/index.js base64 encode hello world"
+Type "dt base64 encode hello world"
 Sleep 300ms
 Enter
 Sleep 1.5s
-Type "node dist/index.js color coral"
+Type "dt color coral"
 Sleep 300ms
 Enter
 Sleep 2s
 Ctrl+l
 
-Type "node dist/index.js jwt eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
+Type "dt jwt eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
 Sleep 300ms
 Enter
 Sleep 2s
 Ctrl+l
 
-Type "node dist/index.js hash hello --algo sha256"
+Type "dt hash hello --algo sha256"
 Sleep 300ms
 Enter
 Sleep 1.5s
-Type "node dist/index.js ts now"
+Type "dt ts now"
 Sleep 300ms
 Enter
 Sleep 1.5s
-Type "node dist/index.js ts now --json"
+Type "dt ts now --json"
 Sleep 300ms
 Enter
 Sleep 1.5s
@@ -55,7 +55,7 @@ Ctrl+l
 
 Type "echo hello pipe"
 Sleep 300ms
-Type " | node dist/index.js base64 encode"
+Type " | dt base64 encode"
 Sleep 300ms
 Enter
 Sleep 1.5s
