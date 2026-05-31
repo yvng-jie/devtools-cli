@@ -21,6 +21,7 @@ function restoreIsTTY(origDesc: PropertyDescriptor | undefined) {
   if (origDesc) {
     Object.defineProperty(process.stdin, 'isTTY', origDesc)
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (process.stdin as any).isTTY
   }
 }

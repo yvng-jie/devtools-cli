@@ -16,6 +16,7 @@ export function readStdinSync(): string {
 
 /** Strip ANSI SGR escape sequences (e.g. chalk coloring codes). */
 function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
   return text.replace(/\u001b\[[0-9;]*m/g, '')
 }
 
