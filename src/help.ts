@@ -18,9 +18,8 @@ export function showHelp(cmds?: Command[]) {
   console.log(`  ${chalk.yellow('Commands:')}`)
   if (cmds) {
     for (const cmd of cmds) {
-      const names =
-        cmd.aliases.length > 0 ? `${chalk.green(cmd.name)} / ${chalk.green(cmd.aliases[0])}` : chalk.green(cmd.name)
-      console.log(`    ${names.padEnd(22)} ${chalk.dim(cmd.description)}`)
+      const nameStr = cmd.aliases.length > 0 ? `${cmd.name} / ${cmd.aliases[0]}` : cmd.name
+      console.log(`    ${chalk.green(nameStr.padEnd(22))} ${chalk.dim(cmd.description)}`)
     }
   }
   console.log(`    ${chalk.green('help')}        ${chalk.dim('Show this help')}`)

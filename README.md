@@ -46,6 +46,10 @@
 <td>Add <code>--json</code> for machine-readable output, pipeable to <code>jq</code></td>
 </tr>
 <tr>
+<td>📋 <b>Clipboard copy</b></td>
+<td>Press <code>C</code> in interactive mode to copy results to clipboard</td>
+</tr>
+<tr>
 <td>🎨 <b>Beautiful output</b></td>
 <td>Colorful, well-formatted results with chalk</td>
 </tr>
