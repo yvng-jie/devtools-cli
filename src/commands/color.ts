@@ -7,11 +7,13 @@ interface Rgb {
   r: number
   g: number
   b: number
+  a?: number
 }
 interface Hsl {
   h: number
   s: number
   l: number
+  a?: number
 }
 
 function hexToRgb(hex: string): Rgb | null {
@@ -19,8 +21,24 @@ function hexToRgb(hex: string): Rgb | null {
   if (h.length === 3) {
     return { r: parseInt(h[0] + h[0], 16), g: parseInt(h[1] + h[1], 16), b: parseInt(h[2] + h[2], 16) }
   }
+  if (h.length === 4) {
+    return {
+      r: parseInt(h[0] + h[0], 16),
+      g: parseInt(h[1] + h[1], 16),
+      b: parseInt(h[2] + h[2], 16),
+      a: Math.round((parseInt(h[3] + h[3], 16) / 255) * 100) / 100,
+    }
+  }
   if (h.length === 6) {
     return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) }
+  }
+  if (h.length === 8) {
+    return {
+      r: parseInt(h.slice(0, 2), 16),
+      g: parseInt(h.slice(2, 4), 16),
+      b: parseInt(h.slice(4, 6), 16),
+      a: Math.round((parseInt(h.slice(6, 8), 16) / 255) * 100) / 100,
+    }
   }
   return null
 }
@@ -84,23 +102,29 @@ function hslToRgb(h: number, s: number, l: number): Rgb {
 }
 
 function parseRgb(str: string): Rgb | null {
-  const m = str.match(/rgba?\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/)
+  const m = str.match(/rgba?\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([\d.]+))?/)
   if (!m) return null
   const r = Number(m[1]),
     g = Number(m[2]),
     b = Number(m[3])
   if (r > 255 || g > 255 || b > 255) return null
-  return { r, g, b }
+  const a = m[4] !== undefined ? clampAlpha(Number(m[4])) : undefined
+  return { r, g, b, a }
 }
 
 function parseHsl(str: string): Hsl | null {
-  const m = str.match(/hsla?\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%/)
+  const m = str.match(/hsla?\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%(?:\s*,\s*([\d.]+))?/)
   if (!m) return null
   const h = Number(m[1]),
     s = Number(m[2]),
     l = Number(m[3])
   if (h > 360 || s > 100 || l > 100) return null
-  return { h, s, l }
+  const a = m[4] !== undefined ? clampAlpha(Number(m[4])) : undefined
+  return { h, s, l, a }
+}
+
+function clampAlpha(v: number): number {
+  return Math.max(0, Math.min(1, Math.round(v * 100) / 100))
 }
 
 // ── main ────────────────────────────────────────────────────────────────────
@@ -119,7 +143,7 @@ export function color(args: string[]) {
     hsl: Hsl | null = null
 
   // Try HEX
-  if (/^#?[0-9a-fA-F]{3,6}$/.test(raw)) {
+  if (/^#?[0-9a-fA-F]{3,8}$/.test(raw)) {
     const r = hexToRgb(raw.startsWith('#') ? raw : '#' + raw)
     if (r) {
       rgb = r
@@ -136,6 +160,8 @@ export function color(args: string[]) {
     hsl = parseHsl(raw)
     if (hsl) {
       rgb = hslToRgb(hsl.h, hsl.s, hsl.l)
+      // Propagate alpha from hsl to rgb
+      if (hsl.a !== undefined) rgb.a = hsl.a
       hex = rgbToHex(rgb.r, rgb.g, rgb.b)
     }
   }
@@ -156,13 +182,21 @@ export function color(args: string[]) {
       `could not parse "${raw}" — supported: HEX (#ff7f50), RGB (rgb(255,127,80)), HSL (hsl(16,100%,66%)), named (coral)`,
     )
   }
+  const _rgb = rgb!
 
-  hsl ??= rgbToHsl(rgb.r, rgb.g, rgb.b)
+  hsl ??= rgbToHsl(_rgb.r, _rgb.g, _rgb.b)
+  // Propagate alpha from rgb to hsl
+  if (_rgb.a !== undefined) hsl.a = _rgb.a
+
+  const hasAlpha = _rgb.a !== undefined
 
   if (jsonMode) {
-    console.log(
-      JSON.stringify({ hex, rgb: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`, hsl: `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)` }),
-    )
+    const result: Record<string, string> = {
+      hex,
+      rgb: hasAlpha ? `rgba(${_rgb.r}, ${_rgb.g}, ${_rgb.b}, ${_rgb.a})` : `rgb(${_rgb.r}, ${_rgb.g}, ${_rgb.b})`,
+      hsl: hasAlpha ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${hsl.a ?? 1})` : `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`,
+    }
+    console.log(JSON.stringify(result))
     return
   }
 
@@ -175,8 +209,13 @@ export function color(args: string[]) {
   console.log(`  ${colorHex('████████████')}`)
   console.log('')
   console.log(`  ${chalk.bold('HEX')}  ${chalk.green(hex)}`)
-  console.log(`  ${chalk.bold('RGB')}  ${chalk.green(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`)}`)
-  console.log(`  ${chalk.bold('HSL')}  ${chalk.green(`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`)}`)
+  if (hasAlpha) {
+    console.log(`  ${chalk.bold('RGBA')} ${chalk.green(`rgba(${_rgb.r}, ${_rgb.g}, ${_rgb.b}, ${_rgb.a})`)}`)
+    console.log(`  ${chalk.bold('HSLA')} ${chalk.green(`hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${hsl.a ?? 1})`)}`)
+  } else {
+    console.log(`  ${chalk.bold('RGB')}  ${chalk.green(`rgb(${_rgb.r}, ${_rgb.g}, ${_rgb.b})`)}`)
+    console.log(`  ${chalk.bold('HSL')}  ${chalk.green(`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`)}`)
+  }
   console.log('')
 }
 
@@ -188,14 +227,18 @@ function colorHelp() {
   console.log('    dt color <value>')
   console.log('')
   console.log(`  ${chalk.yellow('Supported formats:')}`)
-  console.log('    HEX:  #FF7F50, ff7f50')
-  console.log('    RGB:  rgb(255, 127, 80)')
-  console.log('    HSL:  hsl(16, 100%, 66%)')
-  console.log('    Name: coral, steelblue, rebeccapurple')
+  console.log('    HEX:   #FF7F50, ff7f50')
+  console.log('    HEXA:  #FF7F5080 (4 or 8 digits with alpha)')
+  console.log('    RGB:   rgb(255, 127, 80)')
+  console.log('    RGBA:  rgba(255, 127, 80, 0.5)')
+  console.log('    HSL:   hsl(16, 100%, 66%)')
+  console.log('    HSLA:  hsla(16, 100%, 66%, 0.5)')
+  console.log('    Name:  coral, steelblue, rebeccapurple')
   console.log('')
   console.log(`  ${chalk.yellow('Examples:')}`)
   console.log('    dt color #ff7f50')
-  console.log('    dt color "rgb(255, 127, 80)"')
+  console.log('    dt color "#ff7f5080"')
+  console.log('    dt color "rgba(255, 127, 80, 0.5)"')
   console.log('    dt color coral')
   console.log('')
 }

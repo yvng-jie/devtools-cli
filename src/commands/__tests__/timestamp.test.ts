@@ -73,6 +73,18 @@ describe('timestamp', () => {
     expect(() => timestamp(['not-a-date'])).toThrow(ExitError)
   })
 
+  it('should show timezone time with --timezone flag', () => {
+    const output = captureOutput(() => timestamp(['1716806400', '--timezone', 'Asia/Shanghai']))
+    expect(output).toContain('Asia/Shanghai')
+    expect(output).toContain('Local:')
+    expect(output).toContain('UTC:')
+  })
+
+  it('should exit on invalid timezone', () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    expect(() => timestamp(['now', '--timezone', 'Invalid/Zone'])).toThrow(ExitError)
+  })
+
   // --help / -h are now handled by the router (src/index.ts),
   // not by the command function itself.
 })

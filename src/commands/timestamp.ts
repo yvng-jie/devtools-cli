@@ -45,16 +45,62 @@ function parseDateInput(input: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
+/**
+ * Format a Date in a specific IANA timezone (YYYY-MM-DD HH:mm:ss).
+ */
+function formatInTimezone(d: Date, tz: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(d)
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00'
+  return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`
+}
+
 export function timestamp(args: string[]) {
   const jsonMode = args.includes('--json')
-  const filteredArgs = args.filter((a) => a !== '--json')
 
-  // Extract flags
-  const useUtc = filteredArgs.includes('--utc')
-  const useIso = filteredArgs.includes('--iso')
+  // Parse flags and extract input arg
+  let useUtc = false
+  let useIso = false
+  let timezone: string | null = null
+  let inputArg: string | undefined
 
-  // Get input: first non-flag arg, or pipe, or default to "now"
-  const inputArg = filteredArgs.find((a) => a !== '--utc' && a !== '--iso' && a !== '-h' && a !== '--help')
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === '--json') continue
+    if (a === '--utc') {
+      useUtc = true
+      continue
+    }
+    if (a === '--iso') {
+      useIso = true
+      continue
+    }
+    if (a === '--timezone') {
+      timezone = args[i + 1] ?? null
+      if (timezone) {
+        try {
+          Intl.DateTimeFormat(undefined, { timeZone: timezone })
+        } catch {
+          exitWithError(`unknown timezone "${timezone}"`)
+        }
+      }
+      i++ // skip the value
+      continue
+    }
+    if (a === '-h' || a === '--help') continue
+    // First non-flag arg is the input
+    if (inputArg === undefined) inputArg = a
+  }
+
   const rawInput = inputArg ?? readStdinSync() ?? ''
   const input = rawInput.trim() || 'now'
 
@@ -63,18 +109,22 @@ export function timestamp(args: string[]) {
   if (!date) {
     exitWithError(`unable to parse "${input}" — expected a Unix timestamp or date string`)
   }
+  const _date = date!
 
-  const unixSeconds = Math.floor(date.getTime() / 1000)
+  const unixSeconds = Math.floor(_date.getTime() / 1000)
 
   if (jsonMode) {
-    console.log(
-      JSON.stringify({
-        unix: unixSeconds,
-        iso: date.toISOString(),
-        local: formatLocal(date),
-        utc: formatUtc(date),
-      }),
-    )
+    const result: Record<string, unknown> = {
+      unix: unixSeconds,
+      iso: _date.toISOString(),
+      local: formatLocal(_date),
+      utc: formatUtc(_date),
+    }
+    if (timezone) {
+      result.timezone = timezone
+      result[`tz:${timezone}`] = formatInTimezone(_date, timezone)
+    }
+    console.log(JSON.stringify(result))
     return
   }
 
@@ -84,12 +134,16 @@ export function timestamp(args: string[]) {
   console.log(`  ${chalk.dim('─────────────────────')}`)
 
   if (useIso) {
-    console.log(`  ${chalk.dim('ISO:')}      ${chalk.white(date.toISOString())}`)
+    console.log(`  ${chalk.dim('ISO:')}      ${chalk.white(_date.toISOString())}`)
   } else if (useUtc) {
-    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(date))}`)
+    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(_date))}`)
+  } else if (timezone) {
+    console.log(`  ${chalk.dim('Local:')}    ${chalk.white(formatLocal(_date))}`)
+    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(_date))}`)
+    console.log(`  ${chalk.dim(`${timezone}:`)}  ${chalk.white(formatInTimezone(_date, timezone))}`)
   } else {
-    console.log(`  ${chalk.dim('Local:')}    ${chalk.white(formatLocal(date))}`)
-    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(date))}`)
+    console.log(`  ${chalk.dim('Local:')}    ${chalk.white(formatLocal(_date))}`)
+    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(_date))}`)
   }
   console.log('')
 }
@@ -103,16 +157,18 @@ export function timestampHelp() {
   console.log('    echo <value> | dt ts')
   console.log('')
   console.log(`  ${chalk.yellow('Options:')}`)
-  console.log('    --utc         Show time in UTC')
-  console.log('    --iso         Show time in ISO 8601 format')
+  console.log('    --utc                Show time in UTC')
+  console.log('    --iso                Show time in ISO 8601 format')
+  console.log('    --timezone <zone>    Show time in a specific IANA timezone')
   console.log('')
   console.log(`  ${chalk.yellow('Examples:')}`)
-  console.log('    dt ts                   Current timestamp')
-  console.log('    dt ts now               Current timestamp')
-  console.log('    dt ts 1716806400        Timestamp → date')
-  console.log('    dt ts "2026-05-28"      Date → timestamp')
-  console.log('    dt ts 1716806400 --utc  UTC time')
-  console.log('    echo 1716806400 | dt ts Pipe input')
+  console.log('    dt ts                           Current timestamp')
+  console.log('    dt ts now                       Current timestamp')
+  console.log('    dt ts 1716806400                Timestamp → date')
+  console.log('    dt ts "2026-05-28"              Date → timestamp')
+  console.log('    dt ts 1716806400 --utc           UTC time')
+  console.log('    dt ts now --timezone Asia/Shanghai')
+  console.log('    echo 1716806400 | dt ts          Pipe input')
   console.log('')
 }
 

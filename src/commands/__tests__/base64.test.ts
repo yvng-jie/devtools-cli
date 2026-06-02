@@ -54,4 +54,25 @@ describe('base64', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
     expect(() => base64(['decode', 'not-base64!!!'])).toThrow(ExitError)
   })
+
+  it('should encode URL-safe base64 with --url flag', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    // "hello>" encodes to aGVsbG8+ in standard base64; URL-safe replaces + with -
+    base64(['encode', 'hello>', '--url'])
+    expect(spy).toHaveBeenCalledWith('aGVsbG8-')
+  })
+
+  it('should decode URL-safe base64', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    // aGVsbG8+ (standard) → aGVsbG8- (URL-safe)
+    base64(['decode', 'aGVsbG8-'])
+    expect(spy).toHaveBeenCalledWith('hello>')
+  })
+
+  it('should encode URL-safe without padding', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    // URL-safe base64 strips trailing =
+    base64(['encode', 'hello', '--url'])
+    expect(spy).toHaveBeenCalledWith('aGVsbG8')
+  })
 })

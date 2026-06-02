@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { jwt } from '../jwt.js'
 import { ExitError } from '../../errors.js'
@@ -47,5 +48,44 @@ describe('jwt', () => {
     const payload = Buffer.from(JSON.stringify({ name: 'John', exp: 'not-a-number' })).toString('base64url')
     // Should not throw — just skip expiry display
     expect(() => jwt([`${header}.${payload}.xxx`])).not.toThrow()
+  })
+
+  it('should verify valid HMAC signature with --verify', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const secret = 'mysecret'
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')
+    const payload = Buffer.from(JSON.stringify({ name: 'John' })).toString('base64url')
+    const signingInput = `${header}.${payload}`
+    const sig = createHmac('sha256', secret).update(signingInput).digest('base64url')
+    const token = `${signingInput}.${sig}`
+
+    jwt([token, '--verify', secret])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('Signature valid')
+  })
+
+  it('should detect invalid HMAC signature with --verify', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')
+    const payload = Buffer.from(JSON.stringify({ name: 'John' })).toString('base64url')
+    const token = `${header}.${payload}.invalidsignature`
+
+    jwt([token, '--verify', 'wrongsecret'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('Signature invalid')
+  })
+
+  it('should verify with -k alias', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const secret = 'key'
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256' })).toString('base64url')
+    const payload = Buffer.from(JSON.stringify({ sub: '123' })).toString('base64url')
+    const signingInput = `${header}.${payload}`
+    const sig = createHmac('sha256', secret).update(signingInput).digest('base64url')
+    const token = `${signingInput}.${sig}`
+
+    jwt([token, '-k', secret])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('Signature valid')
   })
 })

@@ -16,7 +16,7 @@ export class ExitError extends Error {
  * Print a red error message and throw an ExitError.
  * Use this instead of `console.log(chalk.red(...)) + process.exit(1)`.
  */
-export function exitWithError(message: string): never {
+export const exitWithError = (message: string): never => {
   console.log(chalk.red(`Error: ${message}`))
   throw new ExitError(message)
 }
@@ -24,7 +24,7 @@ export function exitWithError(message: string): never {
 /**
  * Print a red error with usage hint and throw an ExitError.
  */
-export function exitWithUsage(message: string, usage: string): never {
+export const exitWithUsage = (message: string, usage: string): never => {
   console.log(chalk.red(`Error: ${message}`))
   console.log(chalk.dim(`  Usage: ${usage}`))
   throw new ExitError(message)

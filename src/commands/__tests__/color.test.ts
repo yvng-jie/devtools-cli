@@ -74,4 +74,43 @@ describe('color', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
     expect(() => color(['hsl(361, 100%, 50%)'])).toThrow(ExitError)
   })
+
+  it('should parse 8-digit HEX with alpha', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['#ff7f5080'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('#FF7F50')
+    expect(output).toContain('rgba(255, 127, 80, 0.5)')
+    expect(output).toContain('hsla(16, 100%, 66%, 0.5)')
+  })
+
+  it('should parse 4-digit HEX with alpha', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['#ff88'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('rgba(255, 255, 136, 0.53)')
+  })
+
+  it('should parse RGBA input', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['rgba(255, 127, 80, 0.5)'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('rgba(255, 127, 80, 0.5)')
+    expect(output).toContain('hsla(16, 100%, 66%, 0.5)')
+  })
+
+  it('should parse HSLA input', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['hsla(16, 100%, 66%, 0.5)'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('rgba(255, 128, 82, 0.5)')
+    expect(output).toContain('hsla(16, 100%, 66%, 0.5)')
+  })
+
+  it('should clamp alpha value to 0-1 range', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['rgba(255, 0, 0, 1.5)'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('1')
+  })
 })

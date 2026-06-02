@@ -42,5 +42,5 @@ export function showHelp(cmds?: Command[]) {
 }
 
 export function showVersion() {
-  console.log(`devkits v${version} (dt)`)
+  console.log(`devkits ${chalk.green('v' + version)} (dt)`)
 }

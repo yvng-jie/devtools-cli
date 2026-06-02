@@ -1,27 +1,104 @@
-import { randomUUID } from 'node:crypto'
+import { randomUUID, randomBytes } from 'node:crypto'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
 import type { Command } from './types.js'
 
-export function uuid(args: string[]) {
-  const jsonMode = args.includes('--json')
-  const filteredArgs = args.filter((a) => a !== '--json')
+const VERSIONS = ['1', '4', '7'] as const
+type Version = (typeof VERSIONS)[number]
 
-  const countIdx = filteredArgs.indexOf('--count') !== -1 ? filteredArgs.indexOf('--count') : filteredArgs.indexOf('-c')
+/** Generate a UUID v1 (time-based). */
+function uuidV1(): string {
+  // UUID epoch is Oct 15, 1582. Diff from Unix epoch (Jan 1, 1970) in 100ns intervals
+  const uuidEpoch = 0x01b21dd213814000n
+  const now = BigInt(Date.now()) * 10000n + uuidEpoch
+
+  const timeLow = Number(now & 0xffffffffn)
+  const timeMid = Number((now >> 32n) & 0xffffn)
+  const timeHi = Number((now >> 48n) & 0x0fffn) | 0x1000 // version 1
+
+  const clockSeq = randomBytes(2)
+  clockSeq[0] = (clockSeq[0] & 0x3f) | 0x80 // variant 10xx
+
+  const node = randomBytes(6)
+  node[0] = (node[0] & 0xfe) | 0x02 // multicast bit
+
+  const hex = (n: number, len: number) => n.toString(16).padStart(len, '0')
+  const buf = (b: Buffer) => b.toString('hex')
+
+  return `${hex(timeLow, 8)}-${hex(timeMid, 4)}-${hex(timeHi, 4)}-${buf(clockSeq)}-${buf(node)}`
+}
+
+/** Generate a UUID v7 (time-ordered). */
+function uuidV7(): string {
+  const now = Date.now()
+  const rand = randomBytes(10)
+
+  // 48 bits timestamp ms
+  const tsHex = now.toString(16).padStart(12, '0')
+
+  // 4 bits version (7) + 12 bits random
+  rand[0] = (rand[0] & 0x0f) | 0x70
+
+  // 2 bits variant (10) + 6 bits random
+  rand[2] = (rand[2] & 0x3f) | 0x80
+
+  const r = rand.toString('hex')
+  return `${tsHex.slice(0, 8)}-${tsHex.slice(8, 12)}-${r.slice(0, 4)}-${r.slice(4, 8)}-${r.slice(8, 20)}`
+}
+
+/** Parse flags from args. */
+function parseUuidFlags(args: string[]): { json: boolean; count: number; version: Version } {
+  let json = false
   let count = 1
-  if (countIdx >= 0) {
-    const raw = filteredArgs[countIdx + 1]
-    const parsed = Number(raw)
-    if (raw === undefined || !Number.isInteger(parsed) || parsed < 1) {
-      exitWithError('--count must be a positive integer')
+  let version: Version = '4'
+
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === '--json') {
+      json = true
+      continue
     }
-    count = Math.min(parsed, 100)
+    if (a === '--count' || a === '-c') {
+      const raw = args[i + 1]
+      const parsed = Number(raw)
+      if (raw === undefined || !Number.isInteger(parsed) || parsed < 1) {
+        exitWithError('--count must be a positive integer')
+      }
+      count = Math.min(parsed, 100)
+      i++
+      continue
+    }
+    if (a === '--version' || a === '-v') {
+      const raw = args[i + 1]
+      if (raw && VERSIONS.includes(raw as Version)) {
+        version = raw as Version
+      } else {
+        exitWithError(`unsupported UUID version "${raw}" (supported: ${VERSIONS.join(', ')})`)
+      }
+      i++
+      continue
+    }
   }
 
-  const uuids = Array.from({ length: count }, () => randomUUID())
+  return { json, count, version }
+}
+
+export function uuid(args: string[]) {
+  const { json: jsonMode, count, version } = parseUuidFlags(args)
+
+  const uuids = Array.from({ length: count }, () => {
+    switch (version) {
+      case '1':
+        return uuidV1()
+      case '7':
+        return uuidV7()
+      default:
+        return randomUUID()
+    }
+  })
 
   if (jsonMode) {
-    console.log(JSON.stringify({ uuids }))
+    console.log(JSON.stringify({ version: `v${version}`, uuids }))
   } else {
     for (const id of uuids) {
       console.log(chalk.green(id))
@@ -30,24 +107,26 @@ export function uuid(args: string[]) {
 }
 
 function uuidHelp() {
-  console.log(chalk.bold('\n  uuid — Generate random UUID v4'))
+  console.log(chalk.bold('\n  uuid — Generate UUIDs'))
   console.log(`  ${chalk.dim('───')}`)
   console.log('')
   console.log(`  ${chalk.yellow('Usage:')}`)
-  console.log('    dt uuid [--count <n>]')
+  console.log('    dt uuid [options]')
   console.log('')
   console.log(`  ${chalk.yellow('Options:')}`)
-  console.log('    --count, -c   Number of UUIDs to generate (default: 1, max: 100)')
+  console.log('    --count, -c <n>    Number of UUIDs to generate (default: 1, max: 100)')
+  console.log('    --version, -v <v>  UUID version: 1 (time), 4 (random, default), 7 (time-ordered)')
   console.log('')
   console.log(`  ${chalk.yellow('Examples:')}`)
   console.log('    dt uuid')
   console.log('    dt uuid --count 10')
+  console.log('    dt uuid --version 7')
   console.log('')
 }
 export const uuidCommand: Command = {
   name: 'uuid',
   aliases: [],
-  description: 'Generate random UUID v4',
+  description: 'Generate UUIDs (v4, v1, v7)',
   run: uuid,
   help: uuidHelp,
 }
