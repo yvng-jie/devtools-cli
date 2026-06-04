@@ -1,6 +1,10 @@
 import { randomUUID, randomBytes } from 'node:crypto'
+import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
+import { createHelp } from '../help-builder.js'
+import { parseCommonFlags } from '../parse-flags.js'
+import { ask, isBack, pauseWithCopy, captureOutput } from '../interactive-utils.js'
 import type { Command } from './types.js'
 
 const VERSIONS = ['1', '4', '7'] as const
@@ -17,10 +21,10 @@ function uuidV1(): string {
   const timeHi = Number((now >> 48n) & 0x0fffn) | 0x1000 // version 1
 
   const clockSeq = randomBytes(2)
-  clockSeq[0] = (clockSeq[0] & 0x3f) | 0x80 // variant 10xx
+  clockSeq[0] = (clockSeq[0]! & 0x3f) | 0x80 // variant 10xx
 
   const node = randomBytes(6)
-  node[0] = (node[0] & 0xfe) | 0x02 // multicast bit
+  node[0] = (node[0]! & 0xfe) | 0x02 // multicast bit
 
   const hex = (n: number, len: number) => n.toString(16).padStart(len, '0')
   const buf = (b: Buffer) => b.toString('hex')
@@ -37,10 +41,10 @@ function uuidV7(): string {
   const tsHex = now.toString(16).padStart(12, '0')
 
   // 4 bits version (7) + 12 bits random
-  rand[0] = (rand[0] & 0x0f) | 0x70
+  rand[0] = (rand[0]! & 0x0f) | 0x70
 
   // 2 bits variant (10) + 6 bits random
-  rand[2] = (rand[2] & 0x3f) | 0x80
+  rand[2] = (rand[2]! & 0x3f) | 0x80
 
   const r = rand.toString('hex')
   return `${tsHex.slice(0, 8)}-${tsHex.slice(8, 12)}-${r.slice(0, 4)}-${r.slice(4, 8)}-${r.slice(8, 20)}`
@@ -48,18 +52,14 @@ function uuidV7(): string {
 
 /** Parse flags from args. */
 function parseUuidFlags(args: string[]): { json: boolean; count: number; version: Version } {
-  let json = false
+  const { flags, rest } = parseCommonFlags(args)
   let count = 1
   let version: Version = '4'
 
-  for (let i = 0; i < args.length; i++) {
-    const a = args[i]
-    if (a === '--json') {
-      json = true
-      continue
-    }
+  for (let i = 0; i < rest.length; i++) {
+    const a = rest[i]
     if (a === '--count' || a === '-c') {
-      const raw = args[i + 1]
+      const raw = rest[i + 1]
       const parsed = Number(raw)
       if (raw === undefined || !Number.isInteger(parsed) || parsed < 1) {
         exitWithError('--count must be a positive integer')
@@ -69,7 +69,7 @@ function parseUuidFlags(args: string[]): { json: boolean; count: number; version
       continue
     }
     if (a === '--version' || a === '-v') {
-      const raw = args[i + 1]
+      const raw = rest[i + 1]
       if (raw && VERSIONS.includes(raw as Version)) {
         version = raw as Version
       } else {
@@ -80,7 +80,7 @@ function parseUuidFlags(args: string[]): { json: boolean; count: number; version
     }
   }
 
-  return { json, count, version }
+  return { json: flags.json, count, version }
 }
 
 export function uuid(args: string[]) {
@@ -106,27 +106,30 @@ export function uuid(args: string[]) {
   }
 }
 
-function uuidHelp() {
-  console.log(chalk.bold('\n  uuid — Generate UUIDs'))
-  console.log(`  ${chalk.dim('───')}`)
-  console.log('')
-  console.log(`  ${chalk.yellow('Usage:')}`)
-  console.log('    dt uuid [options]')
-  console.log('')
-  console.log(`  ${chalk.yellow('Options:')}`)
-  console.log('    --count, -c <n>    Number of UUIDs to generate (default: 1, max: 100)')
-  console.log('    --version, -v <v>  UUID version: 1 (time), 4 (random, default), 7 (time-ordered)')
-  console.log('')
-  console.log(`  ${chalk.yellow('Examples:')}`)
-  console.log('    dt uuid')
-  console.log('    dt uuid --count 10')
-  console.log('    dt uuid --version 7')
-  console.log('')
+const uuidHelp = createHelp({
+  name: 'uuid',
+  description: 'Generate UUIDs (v4, v1, v7)',
+  usage: 'dt uuid [options]',
+  options: [
+    { flags: '--count, -c <n>', desc: 'Number of UUIDs to generate (default: 1, max: 100)' },
+    { flags: '--version, -v <v>', desc: 'UUID version: 1 (time), 4 (random, default), 7 (time-ordered)' },
+  ],
+  examples: [{ cmd: 'dt uuid' }, { cmd: 'dt uuid --count 10' }, { cmd: 'dt uuid --version 7' }],
+})
+
+async function uuidInteractive(rl: ReturnType<typeof createInterface>): Promise<void> {
+  const countRaw = (await ask(rl, `  ${chalk.yellow('?')} How many UUIDs? ${chalk.dim('(1)')}: `)).trim()
+  if (isBack(countRaw)) return
+  const output = captureOutput(() => uuid(countRaw ? ['--count', countRaw] : []))
+  await pauseWithCopy(rl, output)
 }
+
 export const uuidCommand: Command = {
   name: 'uuid',
   aliases: [],
+  category: 'utility',
   description: 'Generate UUIDs (v4, v1, v7)',
   run: uuid,
   help: uuidHelp,
+  interactive: uuidInteractive,
 }

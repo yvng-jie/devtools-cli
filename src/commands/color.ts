@@ -1,5 +1,9 @@
+import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
+import { createHelp } from '../help-builder.js'
+import { parseCommonFlags } from '../parse-flags.js'
+import { ask, isBack, pauseWithCopy, captureOutput } from '../interactive-utils.js'
 import type { Command } from './types.js'
 import { NAMED_COLORS } from '../data/named-colors.js'
 
@@ -127,13 +131,9 @@ function clampAlpha(v: number): number {
   return Math.max(0, Math.min(1, Math.round(v * 100) / 100))
 }
 
-// ── main ────────────────────────────────────────────────────────────────────
-
 export function color(args: string[]) {
-  const jsonMode = args.includes('--json')
-  const filteredArgs = args.filter((a) => a !== '--json')
-
-  const raw = filteredArgs.join(' ').trim()
+  const { flags, rest } = parseCommonFlags(args)
+  const raw = rest.join(' ').trim()
   if (!raw) {
     exitWithError('provide a color value')
   }
@@ -142,7 +142,6 @@ export function color(args: string[]) {
     rgb: Rgb | null = null,
     hsl: Hsl | null = null
 
-  // Try HEX
   if (/^#?[0-9a-fA-F]{3,8}$/.test(raw)) {
     const r = hexToRgb(raw.startsWith('#') ? raw : '#' + raw)
     if (r) {
@@ -150,22 +149,18 @@ export function color(args: string[]) {
       hex = rgbToHex(r.r, r.g, r.b)
     }
   }
-  // Try RGB
   if (!rgb) {
     rgb = parseRgb(raw)
     if (rgb) hex = rgbToHex(rgb.r, rgb.g, rgb.b)
   }
-  // Try HSL
   if (!rgb) {
     hsl = parseHsl(raw)
     if (hsl) {
       rgb = hslToRgb(hsl.h, hsl.s, hsl.l)
-      // Propagate alpha from hsl to rgb
       if (hsl.a !== undefined) rgb.a = hsl.a
       hex = rgbToHex(rgb.r, rgb.g, rgb.b)
     }
   }
-  // Try named
   if (!rgb) {
     const h = NAMED_COLORS[raw.toLowerCase()]
     if (h) {
@@ -183,14 +178,12 @@ export function color(args: string[]) {
     )
   }
   const _rgb = rgb!
-
   hsl ??= rgbToHsl(_rgb.r, _rgb.g, _rgb.b)
-  // Propagate alpha from rgb to hsl
   if (_rgb.a !== undefined) hsl.a = _rgb.a
 
   const hasAlpha = _rgb.a !== undefined
 
-  if (jsonMode) {
+  if (flags.json) {
     const result: Record<string, string> = {
       hex,
       rgb: hasAlpha ? `rgba(${_rgb.r}, ${_rgb.g}, ${_rgb.b}, ${_rgb.a})` : `rgb(${_rgb.r}, ${_rgb.g}, ${_rgb.b})`,
@@ -201,7 +194,6 @@ export function color(args: string[]) {
   }
 
   const colorHex = chalk.hex(hex)
-
   console.log('')
   console.log(`  ${colorHex('████████████')}  ${colorHex('████████')}`)
   console.log(`  ${colorHex('████████████')}  ${colorHex.bold('  PREVIEW')}`)
@@ -219,34 +211,46 @@ export function color(args: string[]) {
   console.log('')
 }
 
-function colorHelp() {
-  console.log(chalk.bold('\n  color — Convert colors between formats'))
-  console.log(`  ${chalk.dim('─────')}`)
-  console.log('')
-  console.log(`  ${chalk.yellow('Usage:')}`)
-  console.log('    dt color <value>')
-  console.log('')
-  console.log(`  ${chalk.yellow('Supported formats:')}`)
-  console.log('    HEX:   #FF7F50, ff7f50')
-  console.log('    HEXA:  #FF7F5080 (4 or 8 digits with alpha)')
-  console.log('    RGB:   rgb(255, 127, 80)')
-  console.log('    RGBA:  rgba(255, 127, 80, 0.5)')
-  console.log('    HSL:   hsl(16, 100%, 66%)')
-  console.log('    HSLA:  hsla(16, 100%, 66%, 0.5)')
-  console.log('    Name:  coral, steelblue, rebeccapurple')
-  console.log('')
-  console.log(`  ${chalk.yellow('Examples:')}`)
-  console.log('    dt color #ff7f50')
-  console.log('    dt color "#ff7f5080"')
-  console.log('    dt color "rgba(255, 127, 80, 0.5)"')
-  console.log('    dt color coral')
-  console.log('')
+const colorHelp = createHelp({
+  name: 'color',
+  description: 'Convert colors (HEX / RGB / HSL / named)',
+  usage: 'dt color <value>',
+  options: [{ flags: '--json', desc: 'Output as JSON' }],
+  extra: [
+    `  ${chalk.yellow('Supported formats:')}`,
+    '    HEX:   #FF7F50, ff7f50',
+    '    HEXA:  #FF7F5080 (4 or 8 digits with alpha)',
+    '    RGB:   rgb(255, 127, 80)',
+    '    RGBA:  rgba(255, 127, 80, 0.5)',
+    '    HSL:   hsl(16, 100%, 66%)',
+    '    HSLA:  hsla(16, 100%, 66%, 0.5)',
+    '    Name:  coral, steelblue, rebeccapurple',
+    '',
+  ],
+  examples: [
+    { cmd: 'dt color #ff7f50' },
+    { cmd: 'dt color "#ff7f5080"' },
+    { cmd: 'dt color "rgba(255, 127, 80, 0.5)"' },
+    { cmd: 'dt color coral' },
+  ],
+})
+
+async function colorInteractive(rl: ReturnType<typeof createInterface>): Promise<void> {
+  const input = await ask(
+    rl,
+    `  ${chalk.yellow('?')} Color value ${chalk.dim('(e.g. #ff7f50, coral, rgb(255,127,80))')}: `,
+  )
+  if (isBack(input)) return
+  const output = captureOutput(() => color(input ? [input] : []))
+  await pauseWithCopy(rl, output)
 }
 
 export const colorCommand: Command = {
   name: 'color',
   aliases: [],
+  category: 'utility',
   description: 'Convert colors (HEX / RGB / HSL / named)',
   run: color,
   help: colorHelp,
+  interactive: colorInteractive,
 }

@@ -1,14 +1,17 @@
 import { createHash, createHmac } from 'node:crypto'
 import { readFileSync } from 'node:fs'
+import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { readStdinSync } from '../utils.js'
 import { exitWithError } from '../errors.js'
+import { createHelp } from '../help-builder.js'
+import { parseCommonFlags } from '../parse-flags.js'
+import { ask, isBack, pauseWithCopy, captureOutput } from '../interactive-utils.js'
 import type { Command } from './types.js'
 
 const ALGOS = ['sha1', 'sha256', 'sha384', 'sha512'] as const
 type Algo = (typeof ALGOS)[number]
 
-/** Parse named flags from args, returning the remaining positional args. */
 function parseFlags(args: string[]): {
   json: boolean
   algo: Algo
@@ -16,35 +19,31 @@ function parseFlags(args: string[]): {
   key: string | null
   rest: string[]
 } {
+  const { flags, rest } = parseCommonFlags(args)
   const result = {
-    json: false,
+    json: flags.json,
     algo: 'sha256' as Algo,
     file: null as string | null,
     key: null as string | null,
     rest: [] as string[],
   }
-  const skip = new Set<number>()
 
-  for (let i = 0; i < args.length; i++) {
-    const a = args[i]
-    if (skip.has(i)) continue
-
-    if (a === '--json') {
-      result.json = true
-    } else if (a === '--algo' || a === '-a') {
-      const raw = args[i + 1]?.toLowerCase()
+  for (let i = 0; i < rest.length; i++) {
+    const a = rest[i]
+    if (a === '--algo' || a === '-a') {
+      const raw = rest[i + 1]?.toLowerCase()
       if (raw && ALGOS.includes(raw as Algo)) {
         result.algo = raw as Algo
-        skip.add(i + 1)
+        i++
       } else {
         exitWithError(`unsupported algorithm "${raw}" (supported: ${ALGOS.join(', ')})`)
       }
     } else if (a === '--file' || a === '-f') {
-      result.file = args[i + 1] ?? null
-      skip.add(i + 1)
+      result.file = rest[i + 1] ?? null
+      i++
     } else if (a === '--key' || a === '-k') {
-      result.key = args[i + 1] ?? null
-      skip.add(i + 1)
+      result.key = rest[i + 1] ?? null
+      i++
     } else {
       result.rest.push(a)
     }
@@ -56,7 +55,6 @@ function parseFlags(args: string[]): {
 export function hash(args: string[]) {
   const { json: jsonMode, algo, file, key, rest } = parseFlags(args)
 
-  // Resolve input: --file path, positional text, or stdin
   let finalInput = ''
   if (file) {
     try {
@@ -106,36 +104,45 @@ export function hash(args: string[]) {
   console.log('')
 }
 
-function hashHelp() {
-  console.log(chalk.bold('\n  hash — Generate SHA hashes'))
-  console.log(`  ${chalk.dim('────')}`)
-  console.log('')
-  console.log(`  ${chalk.yellow('Usage:')}`)
-  console.log('    dt hash <text> [options]')
-  console.log('    dt hash --file <path> [options]')
-  console.log('    echo <text> | dt hash [options]')
-  console.log('')
-  console.log(`  ${chalk.yellow('Algorithms:')}`)
-  console.log('    sha1, sha256 (default), sha384, sha512')
-  console.log('')
-  console.log(`  ${chalk.yellow('Options:')}`)
-  console.log('    --algo, -a <algo>   Hash algorithm (default: sha256)')
-  console.log('    --file, -f <path>   Hash file contents')
-  console.log('    --key, -k <secret>  HMAC key (enables keyed-hash authentication)')
-  console.log('')
-  console.log(`  ${chalk.yellow('Examples:')}`)
-  console.log('    dt hash "hello"')
-  console.log('    dt hash "hello" --algo sha512')
-  console.log('    dt hash --file config.json')
-  console.log('    dt hash "hello" --key mysecret')
-  console.log('    echo "hello" | dt hash')
-  console.log('')
+const hashHelp = createHelp({
+  name: 'hash',
+  description: 'Generate SHA hashes (sha1/256/384/512)',
+  usage: 'dt hash <text> [options]',
+  options: [
+    { flags: '--algo, -a <algo>', desc: 'Hash algorithm (default: sha256)' },
+    { flags: '--file, -f <path>', desc: 'Hash file contents' },
+    { flags: '--key, -k <secret>', desc: 'HMAC key (enables keyed-hash authentication)' },
+  ],
+  extra: [`  ${chalk.yellow('Algorithms:')}`, '    sha1, sha256 (default), sha384, sha512', ''],
+  examples: [
+    { cmd: 'dt hash "hello"' },
+    { cmd: 'dt hash "hello" --algo sha512' },
+    { cmd: 'dt hash --file config.json' },
+    { cmd: 'dt hash "hello" --key mysecret' },
+    { cmd: 'echo "hello" | dt hash' },
+  ],
+})
+
+async function hashInteractive(rl: ReturnType<typeof createInterface>): Promise<void> {
+  const input = await ask(rl, `  ${chalk.yellow('?')} Text to hash: `)
+  if (isBack(input)) return
+  const algo = (
+    await ask(
+      rl,
+      `  ${chalk.yellow('?')} Algorithm ${chalk.dim('(sha256/sha1/sha384/sha512)')} ${chalk.dim('[sha256]')}: `,
+    )
+  ).trim()
+  if (isBack(algo)) return
+  const output = captureOutput(() => hash(input ? (algo ? [input, '--algo', algo] : [input]) : []))
+  await pauseWithCopy(rl, output)
 }
 
 export const hashCommand: Command = {
   name: 'hash',
   aliases: [],
+  category: 'crypto',
   description: 'Generate SHA hashes (sha1/256/384/512)',
   run: hash,
   help: hashHelp,
+  interactive: hashInteractive,
 }
