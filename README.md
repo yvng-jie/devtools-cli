@@ -9,7 +9,7 @@
 <h1 align="center">🔧 dt — Developer Toolkit</h1>
 <p align="center">
   <b>Terminal Swiss Army Knife</b><br>
-  UUID · Base64 · Color Converter · JWT Decoder · SHA Hash — all in one command.
+  UUID · Base64 · Color Converter · JWT Decoder · SHA Hash · JSON · QR Code · Password Generator · CIDR · MAC · Image Metadata — all in one command.
 </p>
 
 <p align="center">
@@ -31,11 +31,15 @@
 </tr>
 <tr>
 <td>🎮 <b>Interactive mode</b></td>
-<td>Run <code>dt</code> with no args for a guided menu — great for beginners</td>
+<td>Run <code>dt</code> with no args for a categorized menu — great for beginners</td>
 </tr>
 <tr>
-<td>⌨️ <b>Keyboard shortcuts</b></td>
-<td>Interactive mode supports number keys, letter keys (<code>u</code>/<code>b</code>/<code>c</code>/<code>j</code>/<code>h</code>/<code>t</code>), and <code>b</code>/<code>back</code> to go back</td>
+<td>🔍 <b>Search mode</b></td>
+<td>Press <code>s</code> or <code>/</code> in interactive mode to search commands by name, alias, or description</td>
+</tr>
+<tr>
+<td>⌨️ <b>Number shortcuts</b></td>
+<td>Select commands by number in interactive mode; also supports command names and aliases directly</td>
 </tr>
 <tr>
 <td>🔗 <b>Pipe friendly</b></td>
@@ -51,11 +55,11 @@
 </tr>
 <tr>
 <td>🎨 <b>Beautiful output</b></td>
-<td>Colorful, well-formatted results with chalk</td>
+<td>Colorful, well-formatted results with chalk and categorized display</td>
 </tr>
 <tr>
-<td>📦 <b>Zero runtime deps</b></td>
-<td>Only depends on <code>chalk</code> — everything else uses Node.js built-in APIs</td>
+<td>📦 <b>Minimal deps</b></td>
+<td>Only depends on <code>chalk</code> and <code>qrcode</code> — everything else uses Node.js built-in APIs</td>
 </tr>
 </table>
 
@@ -84,35 +88,68 @@ dt
 Get help for any command:
 
 ```bash
-dt help               # Show main help
+dt help               # Show main help (grouped by category)
 dt help uuid          # Show help for a specific command
 dt uuid --help        # Same as above
 ```
 
-### Commands
+### Commands (by category)
 
-| Command     | Alias | Description                               |
-| ----------- | ----- | ----------------------------------------- |
-| `uuid`      | —     | Generate random UUID v4                   |
-| `base64`    | —     | Encode or decode Base64                   |
-| `color`     | —     | Convert colors (HEX / RGB / HSL / named)  |
-| `jwt`       | —     | Decode a JWT token with expiry detection  |
-| `hash`      | —     | Generate SHA hashes (sha1/256/384/512)    |
-| `timestamp` | `ts`  | Convert between Unix timestamps and dates |
-| `help`      | —     | Show help message                         |
+#### 🛡️ Security & Crypto
 
-All commands support `--json` for structured JSON output.
+| Command | Alias | Description                                                           |
+| ------- | ----- | --------------------------------------------------------------------- |
+| `jwt`   | —     | Decode JWT tokens with expiry detection & HMAC signature verification |
+| `hash`  | —     | Generate SHA hashes (sha1/256/384/512) & HMAC                         |
+
+#### 🔤 Encoding
+
+| Command  | Alias | Description                                   |
+| -------- | ----- | --------------------------------------------- |
+| `base64` | —     | Encode or decode Base64 (standard & URL-safe) |
+| `url`    | —     | Encode, decode, or parse URLs & query strings |
+
+#### 🌐 Network
+
+| Command | Alias | Description                                                      |
+| ------- | ----- | ---------------------------------------------------------------- |
+| `cidr`  | —     | CIDR/IP calculator (network, broadcast, subnet mask, host range) |
+| `mac`   | —     | Format and validate MAC addresses (colon/hyphen/dot/cisco/unix)  |
+| `ip`    | —     | Look up IP address information & geolocation                     |
+
+#### 📋 Data Processing
+
+| Command | Alias | Description                          |
+| ------- | ----- | ------------------------------------ |
+| `json`  | —     | Format, validate, and highlight JSON |
+| `diff`  | —     | Compare two strings or files         |
+| `csv`   | —     | Format and view CSV data             |
+
+#### 🧰 Utilities
+
+| Command     | Alias  | Description                                    |
+| ----------- | ------ | ---------------------------------------------- |
+| `uuid`      | —      | Generate UUIDs (v1/v4/v7)                      |
+| `color`     | —      | Convert colors (HEX / RGB(A) / HSL(A) / named) |
+| `timestamp` | `ts`   | Convert between Unix timestamps and dates      |
+| `qrcode`    | `qr`   | Generate QR codes in the terminal              |
+| `random`    | `rand` | Generate passwords & random numbers            |
+
+#### 🔢 Mathematics
+
+| Command | Alias | Description                       |
+| ------- | ----- | --------------------------------- |
+| `math`  | —     | Evaluate mathematical expressions |
+
+#### 🖼️ Media
+
+| Command | Alias | Description                                     |
+| ------- | ----- | ----------------------------------------------- |
+| `image` | —     | Show image file metadata (PNG, JPEG, GIF, WebP) |
+
+> All commands support `--json` for structured JSON output.
 
 ### 📸 Examples
-
-#### UUID
-
-```bash
-dt uuid
-dt uuid --count 5
-dt uuid -c 5                     # Same as --count 5
-dt uuid --count 3 --json        # → {"uuids":["...","...","..."]}
-```
 
 #### Base64
 
@@ -121,6 +158,7 @@ dt base64 encode "hello world"
 dt base64 decode "aGVsbG8gd29ybGQ="
 echo "hello" | dt base64 encode
 dt base64 encode "hello" --json # → {"action":"encode","input":"hello","output":"aGVsbG8="}
+dt base64 encode "hello" --url  # URL-safe (no padding)
 ```
 
 #### Color Converter
@@ -131,6 +169,7 @@ dt color "rgb(255, 127, 80)"
 dt color "hsl(16, 100%, 66%)"
 dt color coral
 dt color coral --json           # → {"hex":"#FF7F50","rgb":"rgb(255,127,80)","hsl":"hsl(16,100%,66%)"}
+dt color "#ff7f5080"             # RGBA with alpha
 ```
 
 #### JWT Decode
@@ -138,6 +177,7 @@ dt color coral --json           # → {"hex":"#FF7F50","rgb":"rgb(255,127,80)","
 ```bash
 dt jwt "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiSm9obiJ9.xxx"
 dt jwt <token> --json           # → {"header":{...},"payload":{...},"expired":true/false}
+dt jwt <token> --verify secret  # Verify HMAC signature
 ```
 
 #### Hash
@@ -148,6 +188,8 @@ dt hash "hello" --algo sha512
 dt hash "hello" -a sha512       # Same as --algo sha512
 echo "hello" | dt hash
 dt hash "hello" --json          # → {"algorithm":"SHA256","input":"hello","hash":"2cf2..."}
+dt hash --file config.json       # Hash file contents
+dt hash "hello" --key secret     # HMAC-SHA256
 ```
 
 #### Timestamp / ts
@@ -160,9 +202,96 @@ dt ts 1716806400 --utc        # UTC time
 dt ts 1716806400 --iso        # ISO 8601 format
 dt ts now --json              # → {"unix":...,"iso":"...","local":"...","utc":"..."}
 echo 1716806400 | dt ts       # Pipe input
+dt ts now --timezone Asia/Shanghai  # Show time in specific timezone
 ```
 
-## 🛠 Development
+#### JSON
+
+```bash
+dt json '{"a":1,"b":{"c":2}}'
+echo '{"a":1}' | dt json
+dt json '{"a":1}' --minify   # {"a":1}
+dt json "invalid" --validate # Check validity
+```
+
+#### QR Code
+
+```bash
+dt qrcode "https://example.com"
+echo "hello" | dt qrcode
+```
+
+#### Random
+
+```bash
+dt random password                    # 16-char password
+dt random password -l 32 --no-symbols # 32-char alphanumeric
+dt random number --min 1 --max 10     # Random integer
+dt random password -c 5               # 5 passwords at once
+```
+
+#### URL
+
+```bash
+dt url encode "hello world"           # → hello%20world
+dt url decode "hello%20world"         # → hello world
+dt url parse "?foo=1&bar=2"           # Parse query string
+echo "hello world" | dt url encode
+```
+
+#### CIDR
+
+```bash
+dt cidr 192.168.1.0/24          # Show network info
+dt cidr 10.0.0.0/8             # Class A network
+```
+
+#### Math
+
+```bash
+dt math "sqrt(16) * 3"          # 12
+dt math "2^10"                  # 1024
+dt math "sin(PI/2)"             # 1
+dt math "100 / 3" --precision 4 # 33.3333
+```
+
+#### MAC Address
+
+```bash
+dt mac aa:bb:cc:dd:ee:ff
+dt mac AA-BB-CC-DD-EE-FF        # Auto-detects format
+dt mac aabb.ccdd.eeff            # Also valid
+```
+
+#### Diff
+
+```bash
+dt diff "abc" "abd"
+dt diff --file old.txt new.txt
+```
+
+#### CSV
+
+```bash
+echo "a,b,c\n1,2,3" | dt csv
+dt csv "name,age\nAlice,30"
+```
+
+#### Image
+
+```bash
+dt image screenshot.png          # Show PNG metadata
+dt image photo.jpg               # Show JPEG metadata
+```
+
+#### IP
+
+```bash
+dt ip                           # Your public IP & location
+dt ip 8.8.8.8                   # Look up a specific IP
+```
+
+## �🛠 Development
 
 ```bash
 git clone https://github.com/yvng-jie/devtools-cli.git
