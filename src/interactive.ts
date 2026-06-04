@@ -1,145 +1,93 @@
 import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { commands } from './commands/index.js'
-import { copyToClipboard } from './utils.js'
-import { ExitError } from './errors.js'
+import { ask, isBack } from './interactive-utils.js'
+import type { Command, CommandCategory } from './commands/types.js'
 
-function ask(rl: ReturnType<typeof createInterface>, query: string): Promise<string> {
-  return new Promise((resolve) => rl.question(query, resolve))
+// ── Category registry ──────────────────────────────────────────
+interface CategoryInfo {
+  label: string
+  icon: string
+  color: (s: string) => string
 }
 
-/** Check if user wants to go back to the main menu. */
-function isBack(input: string): boolean {
-  return input.trim().toLowerCase() === 'b' || input.trim().toLowerCase() === 'back'
+const CATEGORIES: Record<CommandCategory, CategoryInfo> = {
+  crypto: { label: 'Security & Crypto', icon: '\u{1F6E1}\uFE0F', color: (s) => chalk.hex('#FF6B6B')(s) },
+  encoding: { label: 'Encoding', icon: '\u{1F524}', color: (s) => chalk.hex('#4ECDC4')(s) },
+  network: { label: 'Network', icon: '\u{1F310}', color: (s) => chalk.hex('#45B7D1')(s) },
+  data: { label: 'Data Processing', icon: '\u{1F4CB}', color: (s) => chalk.hex('#96CEB4')(s) },
+  utility: { label: 'Utilities', icon: '\u{1F9F0}', color: (s) => chalk.hex('#FFD93D')(s) },
+  math: { label: 'Mathematics', icon: '\u{1F522}', color: (s) => chalk.hex('#DDA0DD')(s) },
+  media: { label: 'Media', icon: '\u{1F5BC}\uFE0F', color: (s) => chalk.hex('#87CEEB')(s) },
 }
 
-/**
- * Run a command function, capture its console output, and handle errors.
- * Returns the captured output lines (empty if nothing was logged or on error).
- */
-function runSafeCapture(fn: () => void): string[] {
-  const captured: string[] = []
-  const origLog = console.log
-  console.log = (...args: unknown[]) => {
-    const line = args.map((a) => (typeof a === 'string' ? a : String(a))).join(' ')
-    captured.push(line)
-    origLog(...args)
+const CATEGORY_ORDER: CommandCategory[] = ['crypto', 'encoding', 'network', 'data', 'utility', 'math', 'media']
+
+// ── Get commands in display order (grouped by category) ────────
+function getCommandsInDisplayOrder(): Command[] {
+  const grouped = new Map<CommandCategory, Command[]>()
+  for (const cat of CATEGORY_ORDER) grouped.set(cat, [])
+  for (const cmd of commands) {
+    const group = grouped.get(cmd.category)
+    if (group) group.push(cmd)
   }
-  try {
-    fn()
-  } catch (err) {
-    if (err instanceof ExitError) {
-      return captured
-    }
-    origLog(`  ${chalk.red(`Unexpected error: ${err}`)}`)
-  } finally {
-    console.log = origLog
+  const result: Command[] = []
+  for (const cat of CATEGORY_ORDER) {
+    const cmds = grouped.get(cat)
+    if (cmds) result.push(...cmds)
   }
-  return captured
+  return result
 }
 
-/** Show a pause message with optional clipboard copy. */
-async function pauseWithCopy(rl: ReturnType<typeof createInterface>, output: string[]): Promise<void> {
-  if (output.length > 0) {
-    const answer = (await ask(rl, `  ${chalk.dim('[C] Copy to clipboard, Enter to continue:')}`)).trim().toLowerCase()
-    if (answer === 'c') {
-      const text = output.join('\n')
-      if (copyToClipboard(text)) {
-        console.log(`  ${chalk.green('✓ Copied to clipboard!')}`)
-      } else {
-        console.log(`  ${chalk.red('✗ Failed to copy — clipboard tool not found')}`)
-      }
-      await ask(rl, `  ${chalk.dim('Press Enter to return to menu...')}`)
-    }
-  } else {
-    await ask(rl, `  ${chalk.dim('Press Enter to return to menu...')}`)
-  }
-}
-
-// ── Interactive prompt handlers per command ────────────────────────────────
-
-type InteractiveHandler = (rl: ReturnType<typeof createInterface>) => Promise<void>
-
-const interactiveHandlers: Record<string, InteractiveHandler> = {
-  async uuid(rl) {
-    const countRaw = (await ask(rl, `  ${chalk.yellow('?')} How many UUIDs? ${chalk.dim('(1)')}: `)).trim()
-    if (isBack(countRaw)) return
-    const output = runSafeCapture(() => commands[0].run(countRaw ? ['--count', countRaw] : []))
-    await pauseWithCopy(rl, output)
-  },
-  async base64(rl) {
-    const actionRaw = (await ask(rl, `  ${chalk.yellow('?')} encode or decode? ${chalk.dim('(encode)')}: `)).trim()
-    if (isBack(actionRaw)) return
-    const action = actionRaw || 'encode'
-    const hint = action === 'decode' ? '(base64 string, e.g. aGVsbG8=)' : '(plain text, e.g. hello)'
-    const input = await ask(rl, `  ${chalk.yellow('?')} Input ${hint}: `)
-    if (isBack(input)) return
-    const output = runSafeCapture(() => commands[1].run(input ? [action, input] : [action]))
-    await pauseWithCopy(rl, output)
-  },
-  async color(rl) {
-    const input = await ask(
-      rl,
-      `  ${chalk.yellow('?')} Color value ${chalk.dim('(e.g. #ff7f50, coral, rgb(255,127,80))')}: `,
-    )
-    if (isBack(input)) return
-    const output = runSafeCapture(() => commands[2].run(input ? [input] : []))
-    await pauseWithCopy(rl, output)
-  },
-  async jwt(rl) {
-    const token = await ask(rl, `  ${chalk.yellow('?')} JWT token: `)
-    if (isBack(token)) return
-    const output = runSafeCapture(() => commands[3].run(token ? [token] : []))
-    await pauseWithCopy(rl, output)
-  },
-  async hash(rl) {
-    const input = await ask(rl, `  ${chalk.yellow('?')} Text to hash: `)
-    if (isBack(input)) return
-    const algo = (
-      await ask(
-        rl,
-        `  ${chalk.yellow('?')} Algorithm ${chalk.dim('(sha256/sha1/sha384/sha512)')} ${chalk.dim('[sha256]')}: `,
-      )
-    ).trim()
-    if (isBack(algo)) return
-    const output = runSafeCapture(() => commands[4].run(input ? (algo ? [input, '--algo', algo] : [input]) : []))
-    await pauseWithCopy(rl, output)
-  },
-  async timestamp(rl) {
-    const input = await ask(
-      rl,
-      `  ${chalk.yellow('?')} Value ${chalk.dim('(timestamp, date string, or "now")')} ${chalk.dim('[now]')}: `,
-    )
-    if (isBack(input)) return
-    const output = runSafeCapture(() => commands[5].run(input ? [input] : []))
-    await pauseWithCopy(rl, output)
-  },
-}
-
-// Build choice mapping: number keys, letter keys, and name keys → command name
+// ── Build choice mapping (matching display order) ──────────────
 function buildChoiceMap(): Record<string, string> {
   const map: Record<string, string> = {}
-  for (const [i, cmd] of commands.entries()) {
-    const numKey = String(i + 1)
-    map[numKey] = cmd.name
+  const orderedCmds = getCommandsInDisplayOrder()
+  for (const [i, cmd] of orderedCmds.entries()) {
+    map[String(i + 1)] = cmd.name
     map[cmd.name] = cmd.name
     for (const alias of cmd.aliases) {
       map[alias] = cmd.name
-    }
-    // First character of name/alias as shortcut
-    map[cmd.name[0]] = cmd.name
-    for (const alias of cmd.aliases) {
-      map[alias[0]] = cmd.name
     }
   }
   return map
 }
 
+// ── Display a group of commands ────────────────────────────────
+function displayCommandGroup(cmds: Command[], startNum: number): number {
+  let num = startNum
+  for (const cmd of cmds) {
+    const displayName = cmd.aliases[0] ?? cmd.name
+    console.log(
+      `    ${chalk.green(String(num)).padEnd(4)} ${chalk.cyan(displayName.padEnd(14))} ${chalk.dim('— ' + cmd.description)}`,
+    )
+    num++
+  }
+  return num
+}
+
+// ── Run a command by name ───────────────────────────────────────
+async function runCommand(cmdName: string, rl: ReturnType<typeof createInterface>): Promise<void> {
+  const cmd = commands.find((c) => c.name === cmdName)
+  if (cmd?.interactive) {
+    await cmd.interactive(rl)
+  } else {
+    console.log(`  ${chalk.red('No interactive mode for this command.')}\n`)
+  }
+}
+
+// ── Interactive main loop ──────────────────────────────────────
 export async function interactive() {
   console.log('')
-  console.log(`  ${chalk.bold.cyan('╭──────────────────────────────────╮')}`)
-  console.log(`  ${chalk.bold.cyan('│')}     ${chalk.bold('🔧 DT — Developer Toolkit')}     ${chalk.bold.cyan('│')}`)
-  console.log(`  ${chalk.bold.cyan('╰──────────────────────────────────╯')}`)
+  console.log(
+    `  ${chalk.bold.cyan('\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510')}`,
+  )
+  console.log(
+    `  ${chalk.bold.cyan('\u2502')}       ${chalk.bold('\uD83D\uDD27 DT \u2014 Developer Toolkit')}    ${chalk.bold.cyan('\u2502')}`,
+  )
+  console.log(
+    `  ${chalk.bold.cyan('\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518')}`,
+  )
   console.log('')
 
   const rl = createInterface({ input: process.stdin, output: process.stdout })
@@ -155,22 +103,30 @@ export async function interactive() {
 
   try {
     while (true) {
+      const orderedCmds = getCommandsInDisplayOrder()
+
       console.log(`  ${chalk.yellow('Select a command:')}`)
-      for (const [i, cmd] of commands.entries()) {
-        const numKey = i + 1
-        const letterKey = cmd.name[0]
-        const displayName = cmd.aliases.length > 0 ? cmd.aliases[0] : cmd.name
-        console.log(
-          `    ${chalk.green(`${numKey}/${letterKey}`).padEnd(8)} ${displayName.padEnd(12)} ${chalk.dim('— ' + cmd.description)}`,
-        )
-      }
-      console.log(`    ${chalk.red('0/q)')} Exit`)
       console.log('')
 
+      let num = 1
+      for (const cat of CATEGORY_ORDER) {
+        const cmds = orderedCmds.filter((c) => c.category === cat)
+        if (cmds.length === 0) continue
+        const info = CATEGORIES[cat]
+        console.log(`  ${chalk.bold(info.color(`${info.icon}  ${info.label}`))}`)
+        num = displayCommandGroup(cmds, num)
+        console.log('')
+      }
+
+      console.log(`  ${chalk.red('0')}/${chalk.red('q')} Exit\t${chalk.yellow('s')}/${chalk.yellow('/')} Search`)
+      console.log('')
+
+      const totalCmds = orderedCmds.length
       let choice: string
       try {
-        const range = `[0-${commands.length}]`
-        choice = (await ask(rl, `  ${chalk.yellow('?')} Choose ${chalk.dim(range)}: `)).trim().toLowerCase()
+        choice = (await ask(rl, `  ${chalk.yellow('?')} Choose ${chalk.dim(`[0-${totalCmds}, s, /]`)}: `))
+          .trim()
+          .toLowerCase()
       } catch {
         console.log(`\n  ${chalk.dim('Bye!')}\n`)
         return
@@ -182,9 +138,54 @@ export async function interactive() {
         return
       }
 
+      // ── Search mode ────────────────────────────────────────────
+      if (choice === 's' || choice === '/') {
+        const query = (await ask(rl, `  ${chalk.yellow('?')} Search commands: `)).trim().toLowerCase()
+        if (isBack(query)) continue
+        if (!query) {
+          console.log(`  ${chalk.red('Please enter a search term.')}\n`)
+          continue
+        }
+
+        const results = commands.filter(
+          (cmd) =>
+            cmd.name.includes(query) ||
+            cmd.aliases.some((a) => a.includes(query)) ||
+            cmd.description.toLowerCase().includes(query),
+        )
+
+        if (results.length === 0) {
+          console.log(`  ${chalk.red(`No commands matching "${query}"`)}\n`)
+          continue
+        }
+
+        console.log(`\n  ${chalk.yellow(`Search results for "${query}" (${results.length} found):`)}`)
+        for (const [i, cmd] of results.entries()) {
+          const displayName = cmd.aliases[0] ?? cmd.name
+          const catInfo = CATEGORIES[cmd.category]
+          console.log(
+            `    ${chalk.green(String(i + 1)).padEnd(4)} ${chalk.cyan(displayName.padEnd(14))} ${chalk.dim('— ' + cmd.description)}  ${chalk.dim(catInfo.label)}`,
+          )
+        }
+        console.log(`    ${chalk.red('0')}/${chalk.red('q')} Back`)
+        console.log('')
+
+        const subChoice = (await ask(rl, `  ${chalk.yellow('?')} Choose: `)).trim().toLowerCase()
+        if (subChoice === '0' || subChoice === 'q' || subChoice === '' || isBack(subChoice)) continue
+
+        const idx = Number(subChoice) - 1
+        if (idx >= 0 && idx < results.length) {
+          await runCommand(results[idx].name, rl)
+        } else {
+          console.log(`  ${chalk.red('Invalid choice.')}\n`)
+        }
+        continue
+      }
+
+      // ── Direct command execution ──────────────────────────────
       const cmdName = choiceMap[choice]
-      if (cmdName && interactiveHandlers[cmdName]) {
-        await interactiveHandlers[cmdName](rl)
+      if (cmdName) {
+        await runCommand(cmdName, rl)
       } else {
         console.log(`  ${chalk.red('Invalid choice, try again.')}\n`)
       }
