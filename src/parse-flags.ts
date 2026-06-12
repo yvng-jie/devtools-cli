@@ -13,6 +13,7 @@
 
 export interface CommonFlags {
   json: boolean
+  lower: boolean
 }
 
 export interface CountFlag extends CommonFlags {
@@ -32,14 +33,17 @@ export interface LengthFlag extends CommonFlags {
 export function parseCommonFlags(args: string[]): { flags: CommonFlags; rest: string[] } {
   const rest: string[] = []
   let json = false
+  let lower = false
   for (const a of args) {
     if (a === '--json') {
       json = true
+    } else if (a === '--lower') {
+      lower = true
     } else {
       rest.push(a)
     }
   }
-  return { flags: { json }, rest }
+  return { flags: { json, lower }, rest }
 }
 
 /**

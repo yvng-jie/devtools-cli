@@ -181,6 +181,10 @@ export function color(args: string[]) {
   hsl ??= rgbToHsl(_rgb.r, _rgb.g, _rgb.b)
   if (_rgb.a !== undefined) hsl.a = _rgb.a
 
+  if (flags.lower) {
+    hex = hex.toLowerCase()
+  }
+
   const hasAlpha = _rgb.a !== undefined
 
   if (flags.json) {
@@ -215,7 +219,10 @@ const colorHelp = createHelp({
   name: 'color',
   description: 'Convert colors (HEX / RGB / HSL / named)',
   usage: 'dt color <value>',
-  options: [{ flags: '--json', desc: 'Output as JSON' }],
+  options: [
+    { flags: '--json', desc: 'Output as JSON' },
+    { flags: '--lower', desc: 'Output lowercase hex' },
+  ],
   extra: [
     `  ${chalk.yellow('Supported formats:')}`,
     '    HEX:   #FF7F50, ff7f50',

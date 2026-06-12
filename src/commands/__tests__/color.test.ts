@@ -113,4 +113,20 @@ describe('color', () => {
     const output = spy.mock.calls.flatMap((c) => c).join(' ')
     expect(output).toContain('1')
   })
+
+  it('should output lowercase hex with --lower', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['coral', '--lower'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('#ff7f50')
+    expect(output).not.toContain('#FF7F50')
+  })
+
+  it('should output lowercase hex with --lower --json', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    color(['coral', '--lower', '--json'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    const parsed = JSON.parse(output)
+    expect(parsed.hex).toBe('#ff7f50')
+  })
 })
