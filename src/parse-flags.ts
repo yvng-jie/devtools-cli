@@ -73,7 +73,7 @@ export function parseCountFlags(
     }
   }
 
-  return { flags: { json: common.json, count }, rest }
+  return { flags: { json: common.json, lower: common.lower, count }, rest }
 }
 
 /**
@@ -109,7 +109,7 @@ export function parseLengthFlags(
     }
   }
 
-  return { flags: { json: common.json, length, useSymbols }, rest }
+  return { flags: { json: common.json, lower: common.lower, length, useSymbols }, rest }
 }
 
 /**
