@@ -69,7 +69,7 @@ export function math(args: string[]) {
   const precisionIdx = rest.indexOf('--precision')
   let precision = 10
   if (precisionIdx >= 0) {
-    precision = Number(rest[precisionIdx + 1]) ?? 10
+    precision = Number(rest[precisionIdx + 1]) || 10
     rest.splice(precisionIdx, 2)
   }
 
