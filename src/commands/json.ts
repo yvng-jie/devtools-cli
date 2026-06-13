@@ -35,7 +35,7 @@ function highlightJson(value: unknown, indent = 2, depth = 0): string {
 }
 
 export function json(args: string[]) {
-  const { flags, rest } = parseCommonFlags(args)
+  const { rest } = parseCommonFlags(args)
   const minify = rest.includes('--minify') || rest.includes('-m')
   const validateOnly = rest.includes('--validate')
   const filteredArgs = rest.filter((a) => a !== '--minify' && a !== '-m' && a !== '--validate')

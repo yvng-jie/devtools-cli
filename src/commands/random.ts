@@ -12,24 +12,6 @@ const PASS_UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 const PASS_DIGITS = '0123456789'
 const PASS_SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?'
 
-function cryptoRandomInt(max: number): number {
-  const bits = Math.ceil(Math.log2(max))
-  const bytes = Math.ceil(bits / 8)
-  const mask = (1 << bits) - 1
-  const buf = new Uint8Array(1)
-
-  while (true) {
-    const arr = new Uint8Array(bytes)
-    for (let i = 0; i < bytes; i++) {
-      crypto.getRandomValues(arr)
-    }
-    const val = Number(BigInt.asUintN(bits, BigInt('0x' + Buffer.from(arr).toString('hex'))))
-    if (val < mask - (mask % max)) {
-      return val % max
-    }
-  }
-}
-
 function generatePassword(length: number, useSymbols: boolean): string {
   const chars = PASS_LOWERCASE + PASS_UPPERCASE + PASS_DIGITS + (useSymbols ? PASS_SYMBOLS : '')
   const buf = new Uint8Array(length)
@@ -74,10 +56,10 @@ export function random(args: string[]) {
       count = parsed
       i++
     } else if (a === '--min') {
-      min = Number(rest[i + 1]) ?? 0
+      min = Number(rest[i + 1]) || 0
       i++
     } else if (a === '--max') {
-      max = Number(rest[i + 1]) ?? 100
+      max = Number(rest[i + 1]) || 100
       i++
     }
   }

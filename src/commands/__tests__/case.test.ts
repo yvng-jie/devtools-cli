@@ -6,8 +6,9 @@ beforeEach(() => {
   vi.restoreAllMocks()
 })
 
+const ESC = String.fromCharCode(27)
 function stripAnsi(text: string): string {
-  return text.replace(/\u001b\[[0-9;]*m/g, '')
+  return text.replace(new RegExp(ESC + '\\[[0-9;]*m', 'g'), '')
 }
 
 describe('case', () => {
