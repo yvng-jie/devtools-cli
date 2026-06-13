@@ -15,6 +15,7 @@ import { diffCommand } from './diff.js'
 import { csvCommand } from './csv.js'
 import { imageCommand } from './image.js'
 import { ipCommand } from './ip.js'
+import { caseCmd } from './case.js'
 import type { Command } from './types.js'
 
 export const commands: Command[] = [
@@ -35,6 +36,7 @@ export const commands: Command[] = [
   csvCommand,
   imageCommand,
   ipCommand,
+  caseCmd,
 ]
 
 // export function findCommand(name: string): Command | undefined {
