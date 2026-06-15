@@ -16,6 +16,12 @@ import { csvCommand } from './csv.js'
 import { imageCommand } from './image.js'
 import { ipCommand } from './ip.js'
 import { caseCmd } from './case.js'
+import { bytesCommand } from './bytes.js'
+import { numberCommand } from './number.js'
+import { asciiCommand } from './ascii.js'
+import { loremCommand } from './lorem.js'
+import { cronCommand } from './cron.js'
+import { completionCommand } from './completion.js'
 import type { Command } from './types.js'
 
 export const commands: Command[] = [
@@ -37,6 +43,12 @@ export const commands: Command[] = [
   imageCommand,
   ipCommand,
   caseCmd,
+  bytesCommand,
+  numberCommand,
+  asciiCommand,
+  loremCommand,
+  cronCommand,
+  completionCommand,
 ]
 
 // export function findCommand(name: string): Command | undefined {

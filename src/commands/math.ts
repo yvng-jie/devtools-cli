@@ -36,14 +36,14 @@ const MATH_CONSTANTS: Record<string, number> = {
 }
 
 function safeEval(expression: string, precision: number): number {
-  const sanitized = expression.replace(/[^0-9+\-*/.()%\s,a-zA-Z]/g, '')
+  const sanitized = expression.replace(/\^/g, '**').replace(/[^0-9+\-*/.()%\s,a-zA-Z]/g, '')
   if (!sanitized.trim()) {
     exitWithError('invalid expression — only numbers, operators, and math functions allowed')
   }
 
   const sandbox: Record<string, unknown> = {
     ...MATH_CONSTANTS,
-    ...Object.fromEntries(Object.entries(MATH_FUNCTIONS).map(([name]) => [name, 0])),
+    ...MATH_FUNCTIONS,
   }
 
   const funcBody = `

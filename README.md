@@ -2,6 +2,7 @@
   <img src="https://img.shields.io/npm/v/devkits?color=blue&label=version" alt="npm version">
   <img src="https://img.shields.io/github/actions/workflow/status/yvng-jie/devtools-cli/ci.yml?branch=main" alt="CI">
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node version">
+  <img src="https://codecov.io/gh/yvng-jie/devtools-cli/branch/main/graph/badge.svg" alt="codecov">
   <img src="https://img.shields.io/npm/l/devkits" alt="License">
   <img src="https://img.shields.io/github/stars/yvng-jie/devtools-cli?style=flat" alt="Stars">
 </p>

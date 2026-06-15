@@ -10,19 +10,22 @@ import type { Command } from './types.js'
 export function url(args: string[]) {
   const { flags, rest } = parseCommonFlags(args)
 
-  const input = rest.join(' ') || readStdinSync()
-
-  if (!input) {
-    exitWithUsage('provide text or a URL to process', 'dt url <encode|decode|parse> <text>')
+  // Determine action from first arg
+  let action = 'encode'
+  let textArgs = rest
+  if (rest.length > 0) {
+    if (/^(encode|decode|parse)$/.test(rest[0]!)) {
+      action = rest[0]!
+      textArgs = rest.slice(1)
+    } else if (/^[a-z]+$/i.test(rest[0]!)) {
+      exitWithUsage(`unsupported action "${rest[0]}"`, 'dt url <encode|decode|parse> <text>')
+    }
   }
 
-  // Determine action
-  const actionMatch = input.match(/^(encode|decode|parse)\b/)
-  const action = actionMatch?.[1] ?? 'encode'
-  const text = actionMatch ? input.slice(action.length).trim() : input
+  const text = textArgs.join(' ') || readStdinSync()
 
   if (!text) {
-    exitWithError('no input provided for URL operation')
+    exitWithUsage('provide text or a URL to process', 'dt url <encode|decode|parse> <text>')
   }
 
   switch (action) {
