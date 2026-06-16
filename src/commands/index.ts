@@ -22,6 +22,7 @@ import { asciiCommand } from './ascii.js'
 import { loremCommand } from './lorem.js'
 import { cronCommand } from './cron.js'
 import { completionCommand } from './completion.js'
+import { semverCommand } from './semver.js'
 import type { Command } from './types.js'
 
 export const commands: Command[] = [
@@ -49,6 +50,7 @@ export const commands: Command[] = [
   loremCommand,
   cronCommand,
   completionCommand,
+  semverCommand,
 ]
 
 // export function findCommand(name: string): Command | undefined {

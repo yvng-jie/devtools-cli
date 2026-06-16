@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { hash } from '../hash.js'
 import { ExitError } from '../../errors.js'
+import { writeFileSync, unlinkSync, existsSync } from 'node:fs'
+
+const TEST_HASH_FILE = '/tmp/test-hash.txt'
 
 // Mock readStdinSync to control piped input in tests
 const mockReadStdinSync = vi.hoisted(() => vi.fn())
@@ -11,6 +14,11 @@ vi.mock('../../utils.js', () => ({
 beforeEach(() => {
   vi.restoreAllMocks()
   mockReadStdinSync.mockReset()
+  writeFileSync(TEST_HASH_FILE, 'hello')
+})
+
+afterEach(() => {
+  if (existsSync(TEST_HASH_FILE)) unlinkSync(TEST_HASH_FILE)
 })
 
 describe('hash', () => {
