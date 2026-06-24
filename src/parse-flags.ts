@@ -63,12 +63,15 @@ export function parseCountFlags(
     const a = rest[i]
     if (a === '--count' || a === '-c') {
       const raw = rest[i + 1]
+      if (raw === undefined) {
+        onError('--count must be a positive integer')
+      }
       const parsed = Number(raw)
-      if (raw === undefined || !Number.isInteger(parsed) || parsed < 1) {
+      if (!Number.isInteger(parsed) || parsed < 1) {
         onError('--count must be a positive integer')
       }
       count = Math.min(parsed, max)
-      rest.splice(i, 2) // remove flag and value
+      rest.splice(i, 2)
       i--
     }
   }

@@ -26,17 +26,17 @@ function parseCidr(input: string): NetworkInfo | null {
 
   if (octets.some((o) => o < 0 || o > 255) || cidr < 0 || cidr > 32) return null
 
-  const maskInt = ~0 << (32 - cidr)
+  const maskInt = cidr === 0 ? 0 : (~0 >>> 0) << (32 - cidr)
   const maskOctets = [(maskInt >>> 24) & 0xff, (maskInt >>> 16) & 0xff, (maskInt >>> 8) & 0xff, maskInt & 0xff]
 
-  const addrInt = (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3]
+  const addrInt = ((octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3]) >>> 0
   const networkInt = addrInt & maskInt
-  const broadcastInt = networkInt | ~maskInt
+  const broadcastInt = (networkInt | ~maskInt) >>> 0
 
   const toOctets = (n: number): string => [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff].join('.')
 
-  const hostCount = cidr >= 31 ? (cidr === 32 ? 1 : 2) : 1 << (32 - cidr)
-  const totalHosts = cidr >= 31 ? hostCount : hostCount - 2
+  const hostCount = cidr === 0 ? 0x100000000 : cidr >= 31 ? (cidr === 32 ? 1 : 2) : 1 << (32 - cidr)
+  const totalHosts = cidr === 0 ? hostCount - 2 : cidr >= 31 ? hostCount : hostCount - 2
 
   return {
     address: octets.join('.'),
@@ -61,22 +61,22 @@ export function cidr(args: string[]) {
   const info = parseCidr(input)
   if (!info) {
     exitWithError(`invalid CIDR "${input}" — expected format: 192.168.1.0/24`)
+    return
   }
-  const _info = info!
 
   if (flags.json) {
-    console.log(JSON.stringify(_info))
+    console.log(JSON.stringify(info))
     return
   }
 
   console.log('')
-  console.log(`  ${chalk.bold('CIDR Block')}   ${chalk.green(`${_info.address}/${_info.cidr}`)}`)
+  console.log(`  ${chalk.bold('CIDR Block')}   ${chalk.green(`${info.address}/${info.cidr}`)}`)
   console.log(`  ${chalk.dim('────────────────────────────────')}`)
-  console.log(`  ${chalk.dim('Network:')}     ${chalk.white(_info.network)}`)
-  console.log(`  ${chalk.dim('Broadcast:')}   ${chalk.white(_info.broadcast)}`)
-  console.log(`  ${chalk.dim('Subnet Mask:')} ${chalk.white(_info.mask)}`)
-  console.log(`  ${chalk.dim('Host Range:')}  ${chalk.white(`${_info.hostMin} — ${_info.hostMax}`)}`)
-  console.log(`  ${chalk.dim('Total Hosts:')} ${chalk.yellow(String(_info.totalHosts))}`)
+  console.log(`  ${chalk.dim('Network:')}     ${chalk.white(info.network)}`)
+  console.log(`  ${chalk.dim('Broadcast:')}   ${chalk.white(info.broadcast)}`)
+  console.log(`  ${chalk.dim('Subnet Mask:')} ${chalk.white(info.mask)}`)
+  console.log(`  ${chalk.dim('Host Range:')}  ${chalk.white(`${info.hostMin} — ${info.hostMax}`)}`)
+  console.log(`  ${chalk.dim('Total Hosts:')} ${chalk.yellow(String(info.totalHosts))}`)
   console.log('')
 }
 

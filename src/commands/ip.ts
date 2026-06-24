@@ -24,7 +24,7 @@ async function fetchIpInfo(targetIp?: string): Promise<IpInfo> {
   const query = targetIp || ''
   const url = `https://ip-api.com/json/${query}?fields=query,city,region,country,countryCode,isp,org,timezone,lat,lon`
 
-  const response = await fetch(url)
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) })
   if (!response.ok) {
     throw new Error(`API returned ${response.status}`)
   }

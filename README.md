@@ -292,7 +292,7 @@ dt ip                           # Your public IP & location
 dt ip 8.8.8.8                   # Look up a specific IP
 ```
 
-## �🛠 Development
+## 🛠 Development
 
 ```bash
 git clone https://github.com/yvng-jie/devtools-cli.git

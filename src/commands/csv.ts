@@ -158,10 +158,11 @@ export function csv(args: string[]) {
       const filterMatch = condition.match(/^(\w+)\s*(>|<|>=|<=|==|!=|contains|startswith)\s*(.+)$/)
       if (!filterMatch) {
         exitWithError('invalid filter — use format: column op value (e.g. "age > 30")')
+        return
       }
-      const colName = filterMatch![1]!
-      const op = filterMatch![2]!
-      let target = filterMatch![3]!.trim()
+      const colName = filterMatch[1]!
+      const op = filterMatch[2]!
+      let target = filterMatch[3]!.trim()
       // Strip quotes
       if ((target.startsWith('"') && target.endsWith('"')) || (target.startsWith("'") && target.endsWith("'"))) {
         target = target.slice(1, -1)

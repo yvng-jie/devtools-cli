@@ -35,26 +35,192 @@ const MATH_CONSTANTS: Record<string, number> = {
   SQRT2: Math.SQRT2,
 }
 
+type TokenType =
+  | 'NUMBER' | 'PLUS' | 'MINUS' | 'STAR' | 'SLASH' | 'PERCENT' | 'POW'
+  | 'LPAREN' | 'RPAREN' | 'COMMA'
+  | 'IDENTIFIER' | 'EOF'
+
+interface Token {
+  type: TokenType
+  value: string
+}
+
+function tokenize(input: string): Token[] {
+  const tokens: Token[] = []
+  let i = 0
+  while (i < input.length) {
+    if (input[i] === ' ' || input[i] === '\t') { i++; continue }
+    if ((input[i] >= '0' && input[i] <= '9') || input[i] === '.') {
+      let num = ''
+      while (i < input.length && ((input[i] >= '0' && input[i] <= '9') || input[i] === '.')) {
+        num += input[i]; i++
+      }
+      tokens.push({ type: 'NUMBER', value: num })
+      continue
+    }
+    if ((input[i] >= 'a' && input[i] <= 'z') || (input[i] >= 'A' && input[i] <= 'Z') || input[i] === '_') {
+      let ident = ''
+      while (i < input.length && ((input[i] >= 'a' && input[i] <= 'z') || (input[i] >= 'A' && input[i] <= 'Z') || (input[i] >= '0' && input[i] <= '9') || input[i] === '_')) {
+        ident += input[i]; i++
+      }
+      tokens.push({ type: 'IDENTIFIER', value: ident })
+      continue
+    }
+    if (i + 1 < input.length && input[i] === '*' && input[i + 1] === '*') {
+      tokens.push({ type: 'POW', value: '**' }); i += 2; continue
+    }
+    switch (input[i]) {
+      case '+': tokens.push({ type: 'PLUS', value: '+' }); i++; break
+      case '-': tokens.push({ type: 'MINUS', value: '-' }); i++; break
+      case '*': tokens.push({ type: 'STAR', value: '*' }); i++; break
+      case '/': tokens.push({ type: 'SLASH', value: '/' }); i++; break
+      case '%': tokens.push({ type: 'PERCENT', value: '%' }); i++; break
+      case '^': tokens.push({ type: 'POW', value: '^' }); i++; break
+      case '(': tokens.push({ type: 'LPAREN', value: '(' }); i++; break
+      case ')': tokens.push({ type: 'RPAREN', value: ')' }); i++; break
+      case ',': tokens.push({ type: 'COMMA', value: ',' }); i++; break
+      default: return []
+    }
+  }
+  tokens.push({ type: 'EOF', value: '' })
+  return tokens
+}
+
+class Parser {
+  private tokens: Token[]
+  private pos: number
+
+  constructor(tokens: Token[]) {
+    this.tokens = tokens
+    this.pos = 0
+  }
+
+  private peek(): Token {
+    return this.tokens[this.pos]
+  }
+
+  private consume(type: TokenType): string {
+    const token = this.tokens[this.pos]
+    if (token.type !== type) {
+      throw new Error(`expected ${type}, got ${token.type}`)
+    }
+    this.pos++
+    return token.value
+  }
+
+  parse(): number {
+    const result = this.expression()
+    if (this.peek().type !== 'EOF') {
+      throw new Error('unexpected tokens after expression')
+    }
+    return result
+  }
+
+  private expression(): number {
+    let left = this.term()
+    while (this.peek().type === 'PLUS' || this.peek().type === 'MINUS') {
+      const op = this.peek().type
+      this.pos++
+      const right = this.term()
+      if (op === 'PLUS') left += right
+      else left -= right
+    }
+    return left
+  }
+
+  private term(): number {
+    let left = this.unary()
+    while (this.peek().type === 'STAR' || this.peek().type === 'SLASH' || this.peek().type === 'PERCENT') {
+      const op = this.peek().type
+      this.pos++
+      const right = this.unary()
+      if (op === 'STAR') left *= right
+      else if (op === 'SLASH') {
+        if (right === 0) throw new Error('division by zero')
+        left /= right
+      } else {
+        left %= right
+      }
+    }
+    return left
+  }
+
+  private unary(): number {
+    if (this.peek().type === 'MINUS') {
+      this.pos++
+      return -this.unary()
+    }
+    if (this.peek().type === 'PLUS') {
+      this.pos++
+      return this.unary()
+    }
+    return this.power()
+  }
+
+  private power(): number {
+    const left = this.primary()
+    if (this.peek().type === 'POW') {
+      this.pos++
+      const right = this.power()
+      return Math.pow(left, right)
+    }
+    return left
+  }
+
+  private primary(): number {
+    const token = this.peek()
+
+    if (token.type === 'NUMBER') {
+      this.pos++
+      return Number(token.value)
+    }
+
+    if (token.type === 'LPAREN') {
+      this.pos++
+      const result = this.expression()
+      this.consume('RPAREN')
+      return result
+    }
+
+    if (token.type === 'IDENTIFIER') {
+      this.pos++
+      const name = token.value
+
+      if (this.peek().type === 'LPAREN') {
+        this.pos++
+        const args: number[] = []
+        if (this.peek().type !== 'RPAREN') {
+          args.push(this.expression())
+          while (this.peek().type === 'COMMA') {
+            this.pos++
+            args.push(this.expression())
+          }
+        }
+        this.consume('RPAREN')
+
+        const fn = MATH_FUNCTIONS[name]
+        if (!fn) throw new Error(`unknown function: ${name}`)
+        return fn(...args)
+      }
+
+      const constant = MATH_CONSTANTS[name]
+      if (constant === undefined) throw new Error(`unknown identifier: ${name}`)
+      return constant
+    }
+
+    throw new Error(`unexpected ${token.type}`)
+  }
+}
+
 function safeEval(expression: string, precision: number): number {
-  const sanitized = expression.replace(/\^/g, '**').replace(/[^0-9+\-*/.()%\s,a-zA-Z]/g, '')
-  if (!sanitized.trim()) {
+  const tokens = tokenize(expression.trim())
+  if (tokens.length === 0 || (tokens.length === 1 && tokens[0].type === 'EOF')) {
     exitWithError('invalid expression — only numbers, operators, and math functions allowed')
   }
 
-  const sandbox: Record<string, unknown> = {
-    ...MATH_CONSTANTS,
-    ...MATH_FUNCTIONS,
-  }
-
-  const funcBody = `
-    const { ${Object.keys(MATH_FUNCTIONS).join(', ')} } = arguments[0];
-    const { ${Object.keys(MATH_CONSTANTS).join(', ')} } = arguments[0];
-    return (${sanitized});
-  `
-
   try {
-    const fn = new Function(funcBody)
-    const result = fn(sandbox)
+    const parser = new Parser(tokens)
+    const result = parser.parse()
     const factor = Math.pow(10, precision)
     return Math.round(result * factor) / factor
   } catch {

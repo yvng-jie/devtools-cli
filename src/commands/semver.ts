@@ -111,14 +111,16 @@ export function semver(args: string[]) {
   }
 
   const parsed = parseSemver(raw)
-  const sv: SemVer = parsed!
 
   if (!parsed) {
     if (validateOnly) {
       exitWithError('invalid semver')
     }
     exitWithError(`"${raw}" is not a valid semver (expected format: X.Y.Z[-pre][+build])`)
+    return
   }
+
+  const sv: SemVer = parsed
 
   if (validateOnly) {
     console.log(chalk.green('✓ Valid semver'))
@@ -128,8 +130,11 @@ export function semver(args: string[]) {
   // Compare mode
   if (compareTarget) {
     const other = parseSemver(compareTarget)
-    if (!other) exitWithError(`"${compareTarget}" is not a valid semver`)
-    const cmp = compareSemver(sv, other!)
+    if (!other) {
+      exitWithError(`"${compareTarget}" is not a valid semver`)
+      return
+    }
+    const cmp = compareSemver(sv, other)
     if (flags.json) {
       console.log(JSON.stringify({ a: raw, b: compareTarget, result: cmp }))
       return

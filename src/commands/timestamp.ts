@@ -82,20 +82,20 @@ export function timestamp(args: string[]) {
   const date = parseDateInput(input)
   if (!date) {
     exitWithError(`unable to parse "${input}" — expected a Unix timestamp or date string`)
+    return
   }
-  const _date = date!
-  const unixSeconds = Math.floor(_date.getTime() / 1000)
+  const unixSeconds = Math.floor(date.getTime() / 1000)
 
   if (flags.json) {
     const result: Record<string, unknown> = {
       unix: unixSeconds,
-      iso: _date.toISOString(),
-      local: formatLocal(_date),
-      utc: formatUtc(_date),
+      iso: date.toISOString(),
+      local: formatLocal(date),
+      utc: formatUtc(date),
     }
     if (timezone) {
       result.timezone = timezone
-      result[`tz:${timezone}`] = formatInTimezone(_date, timezone)
+      result[`tz:${timezone}`] = formatInTimezone(date, timezone)
     }
     console.log(JSON.stringify(result))
     return
@@ -105,16 +105,16 @@ export function timestamp(args: string[]) {
   console.log(`  ${chalk.bold('📅 Timestamp:')} ${chalk.green(String(unixSeconds))}`)
   console.log(`  ${chalk.dim('─────────────────────')}`)
   if (useIso) {
-    console.log(`  ${chalk.dim('ISO:')}      ${chalk.white(_date.toISOString())}`)
+    console.log(`  ${chalk.dim('ISO:')}      ${chalk.white(date.toISOString())}`)
   } else if (useUtc) {
-    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(_date))}`)
+    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(date))}`)
   } else if (timezone) {
-    console.log(`  ${chalk.dim('Local:')}    ${chalk.white(formatLocal(_date))}`)
-    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(_date))}`)
-    console.log(`  ${chalk.dim(`${timezone}:`)}  ${chalk.white(formatInTimezone(_date, timezone))}`)
+    console.log(`  ${chalk.dim('Local:')}    ${chalk.white(formatLocal(date))}`)
+    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(date))}`)
+    console.log(`  ${chalk.dim(`${timezone}:`)}  ${chalk.white(formatInTimezone(date, timezone))}`)
   } else {
-    console.log(`  ${chalk.dim('Local:')}    ${chalk.white(formatLocal(_date))}`)
-    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(_date))}`)
+    console.log(`  ${chalk.dim('Local:')}    ${chalk.white(formatLocal(date))}`)
+    console.log(`  ${chalk.dim('UTC:')}      ${chalk.white(formatUtc(date))}`)
   }
   console.log('')
 }

@@ -45,7 +45,7 @@ async function main() {
       found.help()
       return
     }
-    found.run(args)
+    await found.run(args)
     return
   }
 

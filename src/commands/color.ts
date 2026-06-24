@@ -248,13 +248,12 @@ export function color(args: string[]) {
     exitWithError(
       'could not parse "' + raw + '" — supported: HEX (#ff7f50), RGB (rgb(255,127,80)), HSL (hsl(16,100%,66%)), named (coral)',
     )
+    return
   }
-
-  const p = parsed!
 
   // Palette mode
   if (palette) {
-    const paletteColors = generatePalette(p.hsl, palette, paletteCount)
+    const paletteColors = generatePalette(parsed.hsl, palette, paletteCount)
     const colorData = paletteColors.map((c) => {
       const r = hslToRgb(c.h, c.s, c.l)
       const hx = rgbToHex(r.r, r.g, r.b)
@@ -263,13 +262,13 @@ export function color(args: string[]) {
 
     if (flags.json) {
       const data = colorData.map((c) => ({ hex: c.hex, rgb: c.rgb, hsl: c.hsl }))
-      console.log(JSON.stringify({ base: p.hex, palette: palette, colors: data }))
+      console.log(JSON.stringify({ base: parsed.hex, palette: palette, colors: data }))
       return
     }
 
     console.log('')
     console.log(`  ${chalk.bold(`${palette.charAt(0).toUpperCase() + palette.slice(1)} Palette`)}`)
-    console.log(`  ${chalk.dim('  Base:')} ${chalk.white(p.hex)}`)
+    console.log(`  ${chalk.dim('  Base:')} ${chalk.white(parsed.hex)}`)
     console.log('')
 
     for (const c of colorData) {
@@ -281,9 +280,9 @@ export function color(args: string[]) {
   }
 
   // Single color mode (existing behavior)
-  let displayHex = p.hex
-  const displayRgb = p.rgb
-  const displayHsl = p.hsl
+  let displayHex = parsed.hex
+  const displayRgb = parsed.rgb
+  const displayHsl = parsed.hsl
 
   if (flags.lower) {
     displayHex = displayHex.toLowerCase()

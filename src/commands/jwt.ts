@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { createInterface } from 'node:readline'
 import chalk from 'chalk'
 import { exitWithError } from '../errors.js'
@@ -28,11 +28,7 @@ function verifySignature(token: string, algo: string, secret: string): boolean {
 
   if (expectedSig.length !== actualSig.length) return false
 
-  let result = 0
-  for (let i = 0; i < expectedSig.length; i++) {
-    result |= expectedSig.charCodeAt(i) ^ actualSig.charCodeAt(i)
-  }
-  return result === 0
+  return timingSafeEqual(Buffer.from(expectedSig), Buffer.from(actualSig))
 }
 
 export function jwt(args: string[]) {

@@ -107,4 +107,20 @@ describe('hash', () => {
     expect(output).toContain('HMAC-SHA512')
     expect(output).toContain('db1595ae88a62fd151ec1cba81b98c39df82daae7b4cb9820f446d5bf02f1dcf')
   })
+
+  it('should redact HMAC key in output', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    hash(['hello', '--key', 'supersecret'])
+    const output = spy.mock.calls.flatMap((c) => c).join(' ')
+    expect(output).toContain('[REDACTED]')
+    expect(output).not.toContain('supersecret')
+  })
+
+  it('should output JSON with --json for HMAC', () => {
+    const spy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    hash(['hello', '--key', 'secret', '--json'])
+    const parsed = JSON.parse(spy.mock.calls[0][0])
+    expect(parsed.key).toBe('[REDACTED]')
+    expect(parsed.hash).toBe('88aab3ede8d3adf94d26ab90d3bafd4a2083070c3bcce9c014ee04a443847c0b')
+  })
 })

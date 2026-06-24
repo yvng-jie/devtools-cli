@@ -60,33 +60,33 @@ export function mac(args: string[]) {
   const hex = normalizeMac(input)
   if (!hex) {
     exitWithError(`invalid MAC address "${input}"`)
+    return
   }
-  const _hex = hex!
 
   if (flags.json) {
     console.log(
       JSON.stringify({
         input,
-        normalized: formatMac(_hex, 'colon'),
-        formats: Object.fromEntries(validFormats.map((f) => [f, formatMac(_hex, f)])),
+        normalized: formatMac(hex, 'colon'),
+        formats: Object.fromEntries(validFormats.map((f) => [f, formatMac(hex, f)])),
       }),
     )
     return
   }
 
   if (targetFormat) {
-    console.log(formatMac(_hex, targetFormat))
+    console.log(formatMac(hex, targetFormat))
     return
   }
 
   console.log('')
   console.log(`  ${chalk.bold('MAC Address')}`)
   console.log(`  ${chalk.dim('───────────')}`)
-  console.log(`  ${chalk.dim('colon:')}  ${chalk.green(formatMac(_hex, 'colon'))}`)
-  console.log(`  ${chalk.dim('hyphen:')} ${chalk.green(formatMac(_hex, 'hyphen'))}`)
-  console.log(`  ${chalk.dim('dot:')}    ${chalk.green(formatMac(_hex, 'dot'))}`)
-  console.log(`  ${chalk.dim('cisco:')}  ${chalk.green(formatMac(_hex, 'cisco'))}`)
-  console.log(`  ${chalk.dim('unix:')}   ${chalk.green(formatMac(_hex, 'unix'))}`)
+  console.log(`  ${chalk.dim('colon:')}  ${chalk.green(formatMac(hex, 'colon'))}`)
+  console.log(`  ${chalk.dim('hyphen:')} ${chalk.green(formatMac(hex, 'hyphen'))}`)
+  console.log(`  ${chalk.dim('dot:')}    ${chalk.green(formatMac(hex, 'dot'))}`)
+  console.log(`  ${chalk.dim('cisco:')}  ${chalk.green(formatMac(hex, 'cisco'))}`)
+  console.log(`  ${chalk.dim('unix:')}   ${chalk.green(formatMac(hex, 'unix'))}`)
   console.log('')
 }
 

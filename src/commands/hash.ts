@@ -69,28 +69,27 @@ export function hash(args: string[]) {
   if (!finalInput) {
     exitWithError('no input provided')
   }
-  const _input = finalInput
 
   let hex: string
   if (key) {
-    hex = createHmac(algo, key).update(_input).digest('hex')
+    hex = createHmac(algo, key).update(finalInput).digest('hex')
     if (jsonMode) {
-      console.log(JSON.stringify({ algorithm: 'HMAC-' + algo.toUpperCase(), input: _input, hash: hex, key }))
+      console.log(JSON.stringify({ algorithm: 'HMAC-' + algo.toUpperCase(), input: finalInput, hash: hex, key: '[REDACTED]' }))
       return
     }
     console.log('')
     console.log(`  ${chalk.dim('Algorithm:')} ${chalk.yellow('HMAC-' + algo.toUpperCase())}`)
-    console.log(`  ${chalk.dim('Key:')}       ${chalk.yellow(key)}`)
-    console.log(`  ${chalk.dim('Input:')}     ${chalk.white(_input.slice(0, 60))}${_input.length > 60 ? '...' : ''}`)
+    console.log(`  ${chalk.dim('Key:')}       ${chalk.yellow('[REDACTED]')}`)
+    console.log(`  ${chalk.dim('Input:')}     ${chalk.white(finalInput.slice(0, 60))}${finalInput.length > 60 ? '...' : ''}`)
     console.log(`  ${chalk.dim('Hash:')}      ${chalk.green(hex)}`)
     console.log('')
     return
   }
 
-  hex = createHash(algo).update(_input).digest('hex')
+  hex = createHash(algo).update(finalInput).digest('hex')
 
   if (jsonMode) {
-    console.log(JSON.stringify({ algorithm: algo.toUpperCase(), input: _input, hash: hex }))
+    console.log(JSON.stringify({ algorithm: algo.toUpperCase(), input: finalInput, hash: hex }))
     return
   }
 
@@ -99,7 +98,7 @@ export function hash(args: string[]) {
   if (file) {
     console.log(`  ${chalk.dim('File:')}      ${chalk.white(file)}`)
   }
-  console.log(`  ${chalk.dim('Input:')}     ${chalk.white(_input.slice(0, 60))}${_input.length > 60 ? '...' : ''}`)
+  console.log(`  ${chalk.dim('Input:')}     ${chalk.white(finalInput.slice(0, 60))}${finalInput.length > 60 ? '...' : ''}`)
   console.log(`  ${chalk.dim('Hash:')}      ${chalk.green(hex)}`)
   console.log('')
 }

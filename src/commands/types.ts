@@ -14,7 +14,7 @@ export interface Command {
   aliases: string[]
   category: CommandCategory
   description: string
-  run: (args: string[]) => void
+  run: (args: string[]) => void | Promise<void>
   help: () => void
   /** Interactive mode handler (optional). Receives a readline interface for prompts. */
   interactive?: (rl: Interface) => Promise<void>

@@ -17,16 +17,21 @@ interface ImageInfo {
   colorMode?: string
 }
 
+const MAX_IMAGE_SIZE = 50 * 1024 * 1024
+
 /** Read image header and extract metadata without external deps. */
 function readImageInfo(filePath: string): ImageInfo | null {
   try {
-    const bytes = readFileSync(filePath)
     const sizeBytes = statSync(filePath).size
+    if (sizeBytes > MAX_IMAGE_SIZE) return null
+
+    const bytes = readFileSync(filePath)
     const header = bytes.subarray(0, Math.min(bytes.length, 64))
     const hex = header.toString('hex').toUpperCase()
 
     // PNG
     if (hex.startsWith('89504E47')) {
+      if (bytes.length < 24) return null
       const width = bytes.readUInt32BE(16)
       const height = bytes.readUInt32BE(20)
       const colorType = bytes[25]
@@ -51,10 +56,13 @@ function readImageInfo(filePath: string): ImageInfo | null {
     // JPEG
     if (hex.startsWith('FFD8FF')) {
       let offset = 2
-      while (offset < bytes.length - 1) {
+      let iterations = 0
+      while (offset < bytes.length - 1 && iterations < 100) {
+        iterations++
         if (bytes[offset] !== 0xff) break
         const marker = bytes[offset + 1]
         if (marker === 0xc0 || marker === 0xc1 || marker === 0xc2) {
+          if (offset + 9 > bytes.length) return null
           const height = bytes.readUInt16BE(offset + 5)
           const width = bytes.readUInt16BE(offset + 7)
           const precision = bytes[offset + 4]
@@ -68,6 +76,7 @@ function readImageInfo(filePath: string): ImageInfo | null {
             colorMode: `${precision}-bit`,
           }
         }
+        if (offset + 4 > bytes.length) return null
         const segLen = bytes.readUInt16BE(offset + 2)
         offset += segLen + 2
       }
@@ -76,6 +85,7 @@ function readImageInfo(filePath: string): ImageInfo | null {
 
     // GIF
     if (hex.startsWith('474946')) {
+      if (bytes.length < 10) return null
       const width = bytes.readUInt16LE(6)
       const height = bytes.readUInt16LE(8)
       const version = header.subarray(3, 6).toString() === '89a' ? 'GIF89a' : 'GIF87a'
@@ -144,23 +154,23 @@ export function image(args: string[]) {
   const info = readImageInfo(filePath)
   if (!info) {
     exitWithError(`could not read image "${filePath}" — unsupported format or file not found`)
+    return
   }
-  const _info = info!
 
   if (flags.json) {
-    console.log(JSON.stringify({ ..._info, sizeBytes: _info.sizeBytes, sizeHuman: formatSize(_info.sizeBytes) }))
+    console.log(JSON.stringify({ ...info, sizeBytes: info.sizeBytes, sizeHuman: formatSize(info.sizeBytes) }))
     return
   }
 
   console.log('')
   console.log(`  ${chalk.bold('🖼 Image Info')}`)
   console.log(`  ${chalk.dim('───────────')}`)
-  console.log(`  ${chalk.dim('File:')}       ${chalk.white(_info.file)}`)
-  console.log(`  ${chalk.dim('Format:')}     ${chalk.green(_info.format)}`)
-  console.log(`  ${chalk.dim('Size:')}       ${chalk.white(formatSize(_info.sizeBytes))}`)
-  console.log(`  ${chalk.dim('Dimensions:')} ${chalk.white(`${_info.width} × ${_info.height}`)}`)
-  console.log(`  ${chalk.dim('Aspect:')}     ${chalk.white(_info.aspectRatio)}`)
-  if (_info.colorMode) console.log(`  ${chalk.dim('Color:')}     ${chalk.white(_info.colorMode)}`)
+  console.log(`  ${chalk.dim('File:')}       ${chalk.white(info.file)}`)
+  console.log(`  ${chalk.dim('Format:')}     ${chalk.green(info.format)}`)
+  console.log(`  ${chalk.dim('Size:')}       ${chalk.white(formatSize(info.sizeBytes))}`)
+  console.log(`  ${chalk.dim('Dimensions:')} ${chalk.white(`${info.width} × ${info.height}`)}`)
+  console.log(`  ${chalk.dim('Aspect:')}     ${chalk.white(info.aspectRatio)}`)
+  if (info.colorMode) console.log(`  ${chalk.dim('Color:')}     ${chalk.white(info.colorMode)}`)
   console.log('')
 }
 

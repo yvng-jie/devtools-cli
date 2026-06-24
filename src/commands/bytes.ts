@@ -33,7 +33,9 @@ function convert(bytes: number, si: boolean): Record<Unit, string> {
     result[UNITS[i]] = val < 0.01 && i > 0 ? '<0.01' : val.toFixed(2)
   }
   return result
-} function bytes(args: string[]) {
+}
+
+function bytes(args: string[]) {
   const { flags, rest } = parseCommonFlags(args)
 
   let si = false
