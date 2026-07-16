@@ -21,6 +21,8 @@ Features
 
 Demo
 
+  ![dt demo](assets/demo.gif)
+
   dt                      Interactive categorized menu
   dt help                 Show help grouped by category
   dt help <command>       Show help for a specific command
