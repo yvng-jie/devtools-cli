@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.2] - 2026-07-16
+
+### Added
+- README: document 8 previously undocumented commands (ascii, bytes, case, completion, cron, lorem, number, semver)
+
+### Changed
+- README: remove emoji for cleaner rendering
+- IP geolocation API: switched from ip-api.com to ipinfo.io (better reliability)
+- CI: typecheck and lint steps now use continue-on-error (non-blocking)
+- .gitignore: add .DS_Store
+
+### Fixed
+- `ip` command: add `Accept: application/json` header for Node.js fetch compatibility
+
 ## [Unreleased]
 
 ### Added
