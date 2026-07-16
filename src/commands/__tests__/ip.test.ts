@@ -6,18 +6,18 @@ beforeEach(() => {
   vi.restoreAllMocks()
 })
 
+// ipinfo.io response format
 const mockResponse = {
-  status: 'success',
-  query: '8.8.8.8',
+  ip: '8.8.8.8',
+  hostname: 'dns.google',
   city: 'Mountain View',
   region: 'California',
-  country: 'United States',
-  countryCode: 'US',
-  isp: 'Google LLC',
-  org: 'Google LLC',
+  country: 'US',
+  loc: '37.4056,-122.0775',
+  org: 'AS15169 Google LLC',
+  postal: '94043',
   timezone: 'America/Los_Angeles',
-  lat: 37.422,
-  lon: -122.084,
+  anycast: true,
 }
 
 function mockFetch(ok: boolean, data: unknown) {
@@ -34,8 +34,10 @@ describe('ip', () => {
     await ip(['8.8.8.8'])
     const output = spy.mock.calls.flatMap((c) => c).join(' ')
     expect(output).toContain('8.8.8.8')
+    expect(output).toContain('dns.google')
     expect(output).toContain('Mountain View')
     expect(output).toContain('Google')
+    expect(output).toContain('United States (US)')
   })
 
   it('should output JSON with --json flag', async () => {
@@ -45,6 +47,7 @@ describe('ip', () => {
     const output = JSON.parse(spy.mock.calls[0][0])
     expect(output.ip).toBe('8.8.8.8')
     expect(output.city).toBe('Mountain View')
+    expect(output.countryCode).toBe('US')
   })
 
   it('should exit on API error', async () => {
@@ -53,7 +56,7 @@ describe('ip', () => {
   })
 
   it('should exit on invalid IP', async () => {
-    mockFetch(true, { status: 'fail' })
+    mockFetch(true, { error: true })
     await expect(ip(['bad-ip'])).rejects.toThrow(ExitError)
   })
 
